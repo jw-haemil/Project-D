@@ -1,1 +1,1 @@
-python -m ProjectD.main
+python -m src.main
