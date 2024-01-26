@@ -28,6 +28,8 @@ class Bot(commands.Bot):
         # for filename in os.listdir("./cogs"):
         #     if filename.endswith(".py"):
         #         await bot.load_extension(f"cogs.{filename[:-3]}")
+        
+        # await self.tree.sync()
     
     async def on_ready(self):
         logging.info(f"{self.user} 봇 준비 완료")
