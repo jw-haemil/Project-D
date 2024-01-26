@@ -4,6 +4,7 @@ from discord.ext import commands
 import os
 import dotenv
 import logging
+import asyncio
 
 
 dotenv.load_dotenv() # .env 파일 로드
