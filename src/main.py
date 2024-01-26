@@ -9,9 +9,7 @@ import asyncio
 
 dotenv.load_dotenv() # .env 파일 로드
 
-logging.basicConfig( # 로깅 설정
-    format="[%(asctime)s] [%(filename)s:%(lineno)d] %(message)s", level=logging.INFO
-)
+logger = logging.getLogger("discord") # 로깅 설정
 
 
 # 기본적인 봇 설정
@@ -33,7 +31,7 @@ class Bot(commands.Bot):
         # await self.tree.sync()
     
     async def on_ready(self):
-        logging.info(f"{self.user} 봇 준비 완료")
+        logger.info(f"{self.user} 봇 준비 완료")
         await self.change_presence(
             status=discord.Status.online,
             activity=discord.Game("봇 테스트"), # 봇 상태 메시지 설정
