@@ -23,10 +23,10 @@ class Bot(commands.Bot):
             intents=intents, # 봇 기능 설정
         )
 
-    async def setup_hook(self): ...
-        # for filename in os.listdir("./cogs"):
-        #     if filename.endswith(".py"):
-        #         await bot.load_extension(f"cogs.{filename[:-3]}")
+    async def setup_hook(self):
+        for filename in os.listdir("./src/cogs"):
+            if filename.endswith(".py"):
+                await bot.load_extension(f"cogs.{filename[:-3]}")
         
         # await self.tree.sync()
     
