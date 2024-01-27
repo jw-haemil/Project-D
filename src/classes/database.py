@@ -15,7 +15,7 @@ class DataSQL():
         self.port = int(port)
         self.loop = loop
     
-    async def auth(self, user: str, password: str, database: str, autocommit: bool = True) -> None:
+    async def auth(self, user: str, password: str, database: str, autocommit: bool = True) -> bool:
         """mysql서버에 접속합니다.
 
         Args:
@@ -28,18 +28,24 @@ class DataSQL():
         self.__auth_database = database
         self.__auth_autocommit = autocommit
 
-        self.pool: aiomysql.Pool = await aiomysql.create_pool(
-            host=self.host,
-            port=self.port,
-            user=user,
-            password=password,
-            db=database,
-            loop=self.loop,
-            autocommit=autocommit
-        )
+        try:
+            self.pool: aiomysql.Pool = await aiomysql.create_pool(
+                host=self.host,
+                port=self.port,
+                user=user,
+                password=password,
+                db=database,
+                loop=self.loop,
+                autocommit=autocommit
+            )
+        except aiomysql.OperationalError:
+            self.pool = None
+            return False
+        else:
+            return True
     
     async def close(self) -> bool:
-        if hasattr(self, "pool"):
+        if hasattr(self, "pool") and self.pool is not None:
             self.pool.close()
             await self.pool.wait_closed()
             return True
