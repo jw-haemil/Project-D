@@ -11,4 +11,7 @@ bot = Bot()
 
 
 
-bot.run(os.environ.get("DISCORD_BOT_TOKEN"), log_level=logging.DEBUG)
+bot.run(
+    token=os.environ.get("DISCORD_BOT_TOKEN"),
+    log_level=logging.INFO
+)
