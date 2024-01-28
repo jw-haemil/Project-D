@@ -62,7 +62,5 @@ class Bot(commands.Bot):
             await super().on_command_error(ctx, error) # 기본 오류 처리
     
     async def close(self) -> None:
-        if await self.database.close():
-            self.logger.info("Database connection closed")
-
+        await self.database.close()
         await super().close()

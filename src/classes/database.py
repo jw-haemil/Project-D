@@ -2,6 +2,8 @@ import asyncio
 import aiomysql
 import logging
 
+logger = logging.getLogger("discord")
+
 
 class DataSQL():
     def __init__(self, host: str, port: int, loop: asyncio.AbstractEventLoop = None):
@@ -44,7 +46,7 @@ class DataSQL():
             )
         except aiomysql.MySQLError as e:
             self.pool = None
-            logging.getLogger("discord").error(e)
+            logger.error(e)
             return False
         else:
             return True
@@ -53,11 +55,13 @@ class DataSQL():
         if hasattr(self, "pool") and self.pool is not None:
             self.pool.close()
             await self.pool.wait_closed()
+
+            logger.info("Database connection closed")
             return True
         return False
     
     async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list:
-        # TODO: 쿼리 실행 시 로그 처리
+        
         async with self.pool.acquire() as conn: # poll에 접속
             async with conn.cursor() as cur:
                 await cur.execute(query, args)
