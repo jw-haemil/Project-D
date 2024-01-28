@@ -58,6 +58,8 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass
+        else:
+            await super().on_command_error(ctx, error) # 기본 오류 처리
     
     async def close(self) -> None:
         if await self.database.close():
