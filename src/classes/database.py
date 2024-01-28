@@ -27,10 +27,10 @@ class DataSQL():
         Return:
             bool: 접속 성공 여부.
         """
-        self.__auth_user = user
-        self.__auth_password = password
-        self.__auth_database = database
-        self.__auth_autocommit = autocommit
+        # self.__auth_user = user
+        # self.__auth_password = password
+        # self.__auth_database = database
+        # self.__auth_autocommit = autocommit
 
         try:
             self.pool: aiomysql.Pool = await aiomysql.create_pool(
@@ -65,3 +65,79 @@ class DataSQL():
                     return await cur.fetchall()
                 else:
                     return None
+
+    async def select(self, table: str, columns: list[str] = None, user_id: int = None) -> list:
+        """|coro|
+        테이블의 데이터를 조회합니다.
+        
+        Args:
+            table (str): 테이블 이름
+            columns (list[str], optional): 조회할 컬럼. Defaults to None.
+            user_id (int, optional): 유저 아이디. Defaults to None.
+        
+        Returns:
+            list: 조회된 데이터
+        """
+        if columns is None:
+            columns = "*"
+        query = f"SELECT {','.join(columns)} FROM {table}"
+        if user_id is not None:
+            query += f" WHERE id={user_id}"
+        return await self._query(query, fetch=True)
+
+    async def update(self, table: str, data: dict, user_id: int = None) -> None:
+        """|coro|
+        테이블의 데이터를 업데이트합니다.
+
+        Args:
+            table (str): 테이블 이름
+            data (dict): 업데이트할 데이터
+            user_id (int, optional): 유저 아이디. Defaults to None.
+        """
+        query = f"UPDATE {table} SET {','.join([f'{k}=%s' for k in data.keys()])}"
+        if user_id is not None:
+            query += f" WHERE id={user_id}"
+        args = tuple(data.values())
+        return await self._query(query, args)
+
+    async def delete(self, table: str, user_id: int = None) -> None:
+        """|coro|
+        테이블의 데이터를 삭제합니다.
+
+        Args:
+            table (str): 테이블 이름
+            user_id (int, optional): 유저 아이디. Defaults to None.
+        """
+        query = f"DELETE FROM {table}"
+        if user_id is not None:
+            query += f" WHERE id={user_id}"
+        return await self._query(query)
+
+    async def insert(self, table: str, data: dict) -> None:
+        """|coro|
+        테이블에 데이터를 추가합니다.
+
+        Args:
+            table (str): 테이블 이름
+            data (dict): 추가할 데이터
+        """
+        query = f"INSERT INTO {table} ({','.join(data.keys())}) VALUES ({','.join(['%s'] * len(data))})"
+        args = tuple(data.values())
+        return await self._query(query, args)
+
+    async def count(self, table: str, condition: dict = None) -> int:
+        """|coro|
+        테이블의 데이터 개수를 조회합니다.
+
+        Args:
+            table (str): 테이블 이름
+            condition (dict, optional): 조건. Defaults to None.
+
+        Returns:
+            int: 데이터 개수
+        """
+        query = f"SELECT COUNT(*) FROM {table}"
+        if condition is not None:
+            query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
+        args = tuple(condition.values()) if condition is not None else None
+        return (await self._query(query, args, fetch=True))[0][0]
