@@ -1,5 +1,6 @@
 import asyncio
 import aiomysql
+import logging
 
 
 class DataSQL():
@@ -22,6 +23,9 @@ class DataSQL():
             user (str): user 이름
             password (str): 접속 비밀번호
             autocommit (bool, optional): 변경내용 자동반영. Defaults to True.
+        
+        Return:
+            bool: 접속 성공 여부.
         """
         self.__auth_user = user
         self.__auth_password = password
@@ -38,8 +42,9 @@ class DataSQL():
                 loop=self.loop,
                 autocommit=autocommit
             )
-        except aiomysql.OperationalError:
+        except aiomysql.MySQLError as e:
             self.pool = None
+            logging.getLogger("discord").error(e)
             return False
         else:
             return True
@@ -50,3 +55,13 @@ class DataSQL():
             await self.pool.wait_closed()
             return True
         return False
+    
+    async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list:
+        # TODO: 쿼리 실행 시 로그 처리
+        async with self.pool.acquire() as conn: # poll에 접속
+            async with conn.cursor() as cur:
+                await cur.execute(query, args)
+                if fetch:
+                    return await cur.fetchall()
+                else:
+                    return None
