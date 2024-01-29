@@ -11,7 +11,7 @@ class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
     
     def __init__(self):
-        self.logger = logging.getLogger("discord") # 로깅 설정
+        self.logger = logging.getLogger("discord.bot") # 로깅 설정
         self.database = None
         
         intents = discord.Intents.default()
@@ -29,22 +29,19 @@ class Bot(commands.Bot):
             port=os.environ.get("MYSQL_PORT"),
             loop=self.loop
         )
-        if await self.database.auth(
+        await self.database.auth(
             user=os.environ.get("MYSQL_USER"),
             password=os.environ.get("MYSQL_PASSWORD"),
             database=os.environ.get("MYSQL_DB_NAME"),
-        ):
-            self.logger.info("Database connection established")
-        else:
-            self.logger.error("Database connection failed")
-        
+        )
+
         # Cog 관련 코드
         for filename in os.listdir("./src/cogs"):
             if filename.endswith(".py"):
                 await self.load_extension(f"cogs.{filename[:-3]}")
         
         # await self.tree.sync()
-    
+
     async def on_ready(self):
         self.logger.info(f"{self.user} 봇 준비 완료")
         await self.change_presence(
@@ -57,7 +54,7 @@ class Bot(commands.Bot):
             return
 
         await self.process_commands(message) # 명령어 처리
-    
+
     async def on_command_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass

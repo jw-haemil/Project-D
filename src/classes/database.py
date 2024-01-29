@@ -2,7 +2,7 @@ import asyncio
 import aiomysql
 import logging
 
-logger = logging.getLogger("discord")
+logger = logging.getLogger("discord.database")
 
 
 class DataSQL():
@@ -51,9 +51,10 @@ class DataSQL():
             )
         except aiomysql.MySQLError as e:
             self.pool = None
-            logger.error(e)
+            logger.error(f"Database connection failed: {e}")
             return False
         else:
+            logger.info("Database connection established")
             return True
     
     async def close(self) -> bool:
