@@ -6,6 +6,8 @@ logger = logging.getLogger("discord")
 
 
 class DataSQL():
+    """데이터베이스 클래스"""
+
     def __init__(self, host: str, port: int, loop: asyncio.AbstractEventLoop = None):
         """데이터베이스
 
@@ -17,13 +19,16 @@ class DataSQL():
         self.host = host
         self.port = int(port)
         self.loop = loop
-    
+
+        self.pool = None
+
     async def auth(self, user: str, password: str, database: str, autocommit: bool = True) -> bool:
         """mysql서버에 접속합니다.
 
         Args:
             user (str): user 이름
             password (str): 접속 비밀번호
+            database (str): 접속할 데이터베이스 이름.
             autocommit (bool, optional): 변경내용 자동반영. Defaults to True.
         
         Return:
@@ -52,7 +57,7 @@ class DataSQL():
             return True
     
     async def close(self) -> bool:
-        if hasattr(self, "pool") and self.pool is not None:
+        if self.pool is not None:
             self.pool.close()
             await self.pool.wait_closed()
 
@@ -61,7 +66,8 @@ class DataSQL():
         return False
     
     async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list:
-        
+        logger.debug(f"Query: {query}, Args: {args}")
+
         async with self.pool.acquire() as conn: # poll에 접속
             async with conn.cursor() as cur:
                 await cur.execute(query, args)
@@ -145,3 +151,105 @@ class DataSQL():
             query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
         args = tuple(condition.values()) if condition is not None else None
         return (await self._query(query, args, fetch=True))[0][0]
+    
+    def get_user_info(self, user_id: int) -> "UserInfo":
+        """유저 정보를 생성합니다.
+
+        Args:
+            user_id (int): 유저 아이디
+
+        Returns:
+            UserInfo: 유저 정보
+        """
+        return UserInfo(self, user_id)
+
+
+class UserInfo():
+    def __init__(self, database: DataSQL, user_id: int) -> None:
+        self._database = database
+        self._user_id = user_id
+    
+    async def is_valid_user(self) -> bool:
+        """|coro|
+        유저 정보가 유효한지 확인합니다.
+
+        Args:
+            user_id (int): 유저 아이디
+
+        Returns:
+            bool: 유효 여부
+        """
+        return await self._database.count("user_info", {"id": self._user_id}) > 0
+
+    async def add_user(self) -> None:
+        """|coro|
+        유저 정보를 추가합니다.
+
+        Args:
+            user_id (int): 유저 아이디
+        """
+        await self._database.insert(
+            table="user_info",
+            data={
+                "id": self._user_id,
+                "money": 0
+            }
+        )
+
+    async def delete_user(self) -> None:
+        """|coro|
+        유저 정보를 삭제합니다.
+
+        Args:
+            user_id (int): 유저 아이디
+        """
+        await self._database.delete(table="user_info", user_id=self._user_id)
+
+    @property
+    def id(self) -> int:
+        """유저 아이디를 반환힙니다.
+
+        Returns:
+            int: 유저 아이디
+        """
+        return self._user_id
+
+    @property
+    async def money(self) -> int:
+        """|coro|
+        유저의 돈을 조회합니다.
+
+        Returns:
+            int: 돈
+        """
+        return int(await self._database.select(table="user_info", user_id=self._user_id)[0][1])
+    
+    @money.setter
+    async def money(self, money: int) -> None:
+        """|coro|
+        유저의 돈을 설정합니다.
+
+        Args:
+            money (int): 돈
+        """
+        await self._database.update(table="user_info", data={"money": money}, user_id=self._user_id)
+    
+    @property
+    async def check_time(self) -> int:
+        """|coro|
+        유저의 최근 출석체크 시간을 조회합니다.
+
+        Returns:
+            int: 최근 출석체크 시간
+        """
+        return int(await self._database.select(table="user_info", user_id=self._user_id)[0][2])
+    
+    @check_time.setter
+    async def check_time(self, check_time: int) -> None:
+        """|coro|
+        유저의 최근 출석체크 시간을 설정합니다.
+
+        Args:
+            check_time (int): 최근 출석체크 시간
+        """
+        await self._database.update(table="user_info", data={"check_time": check_time}, user_id=self._user_id)

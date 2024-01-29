@@ -14,16 +14,12 @@ class UserManagement(commands.Cog):
         description="데이터베이스에 사용자를 등록합니다."
     )
     async def register_user(self, ctx: commands.Context):
-        if await self.bot.database.count(table="user_info", condition={"id": ctx.author.id}) > 0:
+        user_info = self.bot.database.get_user_info(ctx.author.id)
+
+        if await user_info.is_valid_user():
             return await ctx.send("이미 등록된 사용자입니다.")
 
-        await self.bot.database.insert(
-            table="user_info",
-            data={
-                "id": ctx.author.id,
-                "money": 0
-            }
-        )
+        await user_info.add_user()
         await ctx.send("사용자를 등록했습니다.")
 
 
