@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 import os
 import dotenv
 import logging
@@ -27,7 +29,21 @@ logging.getLogger().addHandler(handler)
 
 bot = Bot()
 
+# @bot.hybrid_command(
+@bot.command(
+    name="리로드",
+    description="Cog를 리로드합니다.",
+)
+async def reload_cog(ctx: commands.Context):
+    bot.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+    await ctx.defer()
 
+    for filename in os.listdir("./src/cogs"):
+        if filename.endswith(".py") and not filename.startswith("_"):
+            await bot.reload_extension(f"cogs.{filename[:-3]}")
+            bot.logger.debug(f"리로드 완료: cogs.{filename[:-3]}")
+
+    await ctx.send("Cog를 리로드했습니다.")
 
 bot.run(
     token=os.environ.get("DISCORD_BOT_TOKEN"),
