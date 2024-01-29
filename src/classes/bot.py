@@ -52,7 +52,10 @@ class Bot(commands.Bot):
             activity=discord.Game("봇 테스트"), # 봇 상태 메시지 설정
         )
     
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
+        if message.guild is None: # DM은 무시
+            return
+
         await self.process_commands(message) # 명령어 처리
     
     async def on_command_error(self, ctx: commands.Context, error):
