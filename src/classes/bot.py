@@ -11,7 +11,7 @@ class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
     
     def __init__(self):
-        self.logger = logging.getLogger("discord.bot") # 로깅 설정
+        self.logger = logging.getLogger("bot") # 로깅 설정
         self.database = None
         
         intents = discord.Intents.default()
