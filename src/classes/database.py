@@ -2,7 +2,7 @@ import asyncio
 import aiomysql
 import logging
 
-logger = logging.getLogger("bot.database")
+logger = logging.getLogger("discord.bot.database")
 
 
 class DataSQL():
