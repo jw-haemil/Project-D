@@ -24,6 +24,7 @@ handler.setFormatter(
         style="{"
     )
 )
+handler.setLevel(logging.DEBUG)
 logging.getLogger().addHandler(handler)
 
 
