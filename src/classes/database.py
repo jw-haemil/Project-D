@@ -2,7 +2,7 @@ import asyncio
 import aiomysql
 import logging
 
-logger = logging.getLogger("discord.database")
+logger = logging.getLogger("bot.database")
 
 
 class DataSQL():
@@ -206,8 +206,7 @@ class UserInfo():
         """
         await self._database.delete(table="user_info", user_id=self._user_id)
 
-    @property
-    def id(self) -> int:
+    def get_id(self) -> int:
         """유저 아이디를 반환힙니다.
 
         Returns:
@@ -215,18 +214,17 @@ class UserInfo():
         """
         return self._user_id
 
-    @property
-    async def money(self) -> int:
+    async def get_money(self) -> int:
         """|coro|
         유저의 돈을 조회합니다.
 
         Returns:
             int: 돈
         """
-        return int(await self._database.select(table="user_info", user_id=self._user_id)[0][1])
+        result = await self._database.select(table="user_info", user_id=self._user_id)
+        return int(result[0][1])
     
-    @money.setter
-    async def money(self, money: int) -> None:
+    async def set_money(self, money: int) -> None:
         """|coro|
         유저의 돈을 설정합니다.
 
@@ -234,19 +232,27 @@ class UserInfo():
             money (int): 돈
         """
         await self._database.update(table="user_info", data={"money": money}, user_id=self._user_id)
-    
-    @property
-    async def check_time(self) -> int:
+
+    async def add_money(self, money: int) -> None:
+        """|coro|
+        유저의 돈을 추가합니다.
+
+        Args:
+            money (int): 돈
+        """
+        await self.set_money(await self.get_money() + money)
+
+    async def get_check_time(self) -> int | None:
         """|coro|
         유저의 최근 출석체크 시간을 조회합니다.
 
         Returns:
             int: 최근 출석체크 시간
         """
-        return int(await self._database.select(table="user_info", user_id=self._user_id)[0][2])
+        result = await self._database.select(table="user_info", user_id=self._user_id)
+        return int(result[0][2])
     
-    @check_time.setter
-    async def check_time(self, check_time: int) -> None:
+    async def set_check_time(self, check_time: int) -> None:
         """|coro|
         유저의 최근 출석체크 시간을 설정합니다.
 
