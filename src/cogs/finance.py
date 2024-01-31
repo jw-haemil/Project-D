@@ -53,7 +53,7 @@ class Finance(Cog):
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
         if check_time.date() + timedelta(days=1) <= datetime.utcnow().date(): # 시간 비교
-            if random.randint(0, 999) == 511:
+            if random.random() < 0.001:
                 money = 5000
                 await ctx.reply(f"출석체크 완료! 축하합니다! 0.1% 확률을 뚫고 5,000원을 받았습니다.")
             else:
