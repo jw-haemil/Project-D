@@ -13,7 +13,7 @@ class Game(Cog):
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
         description="금액을 걸고 동전 던지기 게임을 시작합니다."
     )
-    async def coin_flip(self, ctx: commands.Context, face: Literal["앞", "뒤"], money: int):
+    async def coin_flip(self, ctx: commands.Context, face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
         self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         user_info = self.bot.database.get_user_info(ctx.author.id)
@@ -21,7 +21,9 @@ class Game(Cog):
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
             return
-        elif money > await user_info.get_money(): # 돈이 부족하면
+        
+        money = await user_info.get_money() if money in ("올인", "모두") else money
+        if money > await user_info.get_money(): # 돈이 부족하면
             await ctx.reply("돈이 부족합니다.")
             return
         elif money <= 0:
@@ -52,8 +54,8 @@ class Game(Cog):
         elif isinstance(error, commands.BadLiteralArgument):
             await ctx.reply("**앞** 또는 **뒤** 중에 하나를 입력해 주세요.")
 
-        elif isinstance(error, commands.BadArgument):
-            await ctx.reply("베팅금액은 정수로 입력해 주세요.")
+        elif isinstance(error, commands.BadUnionArgument):
+            await ctx.reply("베팅금액은 정수 또는 `올인`, `모두`로 입력해 주세요.")
 
         else:
             await ctx.send(f"오류가 발생했습니다.\n```{type(error)}: {error}```")
