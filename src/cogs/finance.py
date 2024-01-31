@@ -15,7 +15,7 @@ class Finance(Cog):
         description="내 자산, 타인의 자산을 확인합니다."
     )
     async def asset_info(self, ctx: commands.Context, other_user: discord.User = None):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         if other_user == ctx.author or other_user is None:
             user = ctx.author
@@ -44,7 +44,7 @@ class Finance(Cog):
         description="출석체크를 합니다."
     )
     async def attendance(self, ctx: commands.Context):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
@@ -53,7 +53,7 @@ class Finance(Cog):
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
         if check_time.date() + timedelta(days=1) <= datetime.utcnow().date(): # 시간 비교
-            if random.randint(0, 999) == 511:
+            if random.random() < 0.001:
                 money = 5000
                 await ctx.reply(f"출석체크 완료! 축하합니다! 0.1% 확률을 뚫고 5,000원을 받았습니다.")
             else:
@@ -72,7 +72,7 @@ class Finance(Cog):
         description="다른 사람에게 돈을 보냅니다."
     )
     async def send_money(self, ctx: commands.Context, other_user: discord.User, money: int):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)

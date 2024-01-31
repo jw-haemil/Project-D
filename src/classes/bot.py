@@ -74,4 +74,4 @@ class Cog(commands.Cog):
         self.bot = bot
         self.logger = logging.getLogger(f"discord.bot.{self.__class__.__name__}")
 
-        self.bot.logger.info(f"Cog {self.__class__.__name__} loaded")
+        self.bot.logger.debug(f"Cog {self.__class__.__name__} loaded")
