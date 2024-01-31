@@ -41,10 +41,10 @@ class Game(Cog):
             # 확정으로 반 차감, 20% 확률로 모두 잃음
             if money == 1 or random.random() < 0.2:
                 await user_info.add_money(-money) # 돈 차감
-                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈 전부를 잃었습니다. ({-money:,}원)")
+                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈 전부를 잃었습니다. (잃은 돈: {-money:,}원)")
             else:
                 await user_info.add_money(-(money//2)) # 돈 차감
-                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈 절반을 잃었습니다. ({-(money//2):,}원)")
+                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈 절반을 잃었습니다. (잃은 돈: {-(money//2):,}원)")
 
     @coin_flip.error
     async def coin_flip_error(self, ctx: commands.Context, error):
