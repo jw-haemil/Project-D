@@ -25,6 +25,8 @@ class Game(Cog):
         money = await user_info.get_money() if money in ("올인", "모두") else money
         if money > await user_info.get_money(): # 돈이 부족하면
             await ctx.reply("돈이 부족합니다.")
+        elif money > (user_money := await user_info.get_money()): # 돈이 부족하면
+            await ctx.reply(f"돈이 부족합니다. (가지고 있는 돈: {user_money:,}원)")
             return
         elif money <= 0:
             await ctx.reply("베팅금액은 1원 이상이어야 합니다.")
