@@ -65,3 +65,13 @@ class Bot(commands.Bot):
         if self.database is not None:
             await self.database.close()
         await super().close()
+
+
+class Cog(commands.Cog):
+    """project-d의 기반이 되는 코드 객체"""
+
+    def __init__(self, bot: Bot):
+        self.bot = bot
+        self.logger = logging.getLogger(f"discord.bot.{self.__class__.__name__}")
+
+        self.bot.logger.info(f"Cog {self.__class__.__name__} loaded")

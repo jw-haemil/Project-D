@@ -1,13 +1,10 @@
 import discord
 from discord.ext import commands
 
-from classes.bot import Bot
+from classes.bot import Bot, Cog
 
 
-class LifeConvenience(commands.Cog):
-    def __init__(self, bot: Bot):
-        self.bot = bot
-
+class LifeConvenience(Cog): ...
 
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가

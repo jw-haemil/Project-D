@@ -1,20 +1,17 @@
 import discord
 from discord.ext import commands
 
-from classes.bot import Bot
+from classes.bot import Bot, Cog
 
 
-class UserManagement(commands.Cog):
-    def __init__(self, bot: Bot):
-        self.bot = bot
-    
+class UserManagement(Cog):
     @commands.command(
         name="사용자등록",
         aliases=["등록"],
         description="데이터베이스에 사용자를 등록합니다."
     )
     async def register_user(self, ctx: commands.Context):
-        self.bot.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         if await user_info.is_valid_user():

@@ -1,20 +1,14 @@
 import discord
 from discord.ext import commands
 
-import logging
 import random
 import time
 from datetime import datetime, timedelta
 
-from classes.bot import Bot
+from classes.bot import Bot, Cog
 
 
-class Finance(commands.Cog):
-
-    def __init__(self, bot: Bot):
-        self.bot = bot
-        self.logger = logging.getLogger("discord.bot.Finance")
-
+class Finance(Cog):
     @commands.command(
         name="내자산",
         aliases=["돈", "자산", "잔액", "잔고"],
@@ -78,6 +72,8 @@ class Finance(commands.Cog):
         description="다른 사람에게 돈을 보냅니다."
     )
     async def send_money(self, ctx: commands.Context, other_user: discord.User, money: int):
+        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)
 
