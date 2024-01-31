@@ -30,6 +30,7 @@ class Game(Cog):
 
         random_face = random.choice(["앞", "뒤"]) # 랜덤 값 생성
         if random_face == face:
+            money = 1 if money == 1 else money//2 # 배팅금액 조정
             await user_info.add_money(money) # 돈 추가
             random_face = "뒷" if random_face == "뒤" else random_face
             await ctx.reply(f"축하합니다! {random_face}면이 나와 {money:,}원을 받았습니다.")
@@ -42,7 +43,6 @@ class Game(Cog):
             else:
                 await user_info.add_money(-(money//2)) # 돈 차감
                 await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈 절반을 잃었습니다. ({-(money//2):,}원)")
-            
 
     @coin_flip.error
     async def coin_flip_error(self, ctx: commands.Context, error):
