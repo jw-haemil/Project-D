@@ -41,8 +41,8 @@ async def reload_cog(ctx: commands.Context):
 
     for filename in os.listdir("./src/cogs"):
         if filename.endswith(".py") and not filename.startswith("_"):
-            await bot.reload_extension(f"cogs.{filename[:-3]}")
-            bot.logger.debug(f"리로드 완료: cogs.{filename[:-3]}")
+            await bot.reload_extension(f"src.cogs.{filename[:-3]}")
+            bot.logger.debug(f"리로드 완료: src.cogs.{filename[:-3]}")
 
     await ctx.send("Cog를 리로드했습니다.")
 
