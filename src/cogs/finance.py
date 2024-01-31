@@ -52,7 +52,7 @@ class Finance(Cog):
             return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
-        if check_time.date() + timedelta(days=1) <= datetime.utcnow().date(): # 시간 비교
+        if (check_time + timedelta(days=1)).date() <= (datetime.utcnow() + timedelta(hours=9)).date(): # 시간 비교
             if random.random() < 0.001:
                 money = 5000
                 await ctx.reply(f"출석체크 완료! 축하합니다! 0.1% 확률을 뚫고 5,000원을 받았습니다.")
@@ -61,7 +61,7 @@ class Finance(Cog):
                 await ctx.reply(f"출석체크 완료! {money:,}원을 받았습니다.")
 
             await user_info.add_money(money) # 돈 추가
-            await user_info.set_check_time(int(time.time())) # 출석체크 시간 업데이트
+            await user_info.set_check_time(int((datetime.utcnow() + timedelta(hours=9)).timestamp())) # 출석체크 시간 업데이트
 
         else:
             await ctx.send("출석체크는 하루에 한 번만 가능합니다.")
