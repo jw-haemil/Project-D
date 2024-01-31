@@ -21,8 +21,8 @@ class Game(Cog):
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
             return
-        elif money > await user_info.get_money(): # 돈이 부족하면
-            await ctx.reply("돈이 부족합니다.")
+        elif money > (user_money := await user_info.get_money()): # 돈이 부족하면
+            await ctx.reply(f"돈이 부족합니다. (가지고 있는 돈: {user_money:,}원)")
             return
         elif money <= 0:
             await ctx.reply("베팅금액은 1원 이상이어야 합니다.")
