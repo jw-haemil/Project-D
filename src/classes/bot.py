@@ -20,6 +20,7 @@ class Bot(commands.Bot):
         super().__init__(
             command_prefix=";", # 봇 접두사
             intents=intents, # 봇 기능 설정
+            help_command=HelpCommand()
         )
 
     async def setup_hook(self):
@@ -75,3 +76,16 @@ class Cog(commands.Cog):
         self.logger = logging.getLogger(f"discord.bot.{self.__class__.__name__}")
 
         self.bot.logger.debug(f"Cog {self.__class__.__name__} loaded")
+
+
+class HelpCommand(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        destination = self.get_destination()
+        embed = discord.Embed(
+            color=discord.Color.random(),
+            description=""
+        )
+        for page in self.paginator.pages:
+            embed.description += page
+
+        await destination.send(embed=embed)

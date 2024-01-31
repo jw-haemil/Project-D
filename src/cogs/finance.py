@@ -32,7 +32,7 @@ class Finance(Cog):
 
         embed = discord.Embed(
             title=f"{user.display_name}님의 자산정보",
-            color=0x00ff00
+            color=discord.Color.random()
         )
         embed.add_field(name="자산", value=f"{await user_info.get_money():,}원")
         await ctx.reply(embed=embed)
