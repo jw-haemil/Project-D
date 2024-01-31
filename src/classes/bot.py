@@ -4,7 +4,7 @@ from discord.ext import commands
 import os
 import logging
 
-from classes.database import DataSQL
+from src.classes.database import DataSQL
 
 
 class Bot(commands.Bot):
@@ -38,7 +38,7 @@ class Bot(commands.Bot):
         # Cog 관련 코드
         for filename in os.listdir("./src/cogs"):
             if filename.endswith(".py"):
-                await self.load_extension(f"cogs.{filename[:-3]}")
+                await self.load_extension(f"src.cogs.{filename[:-3]}")
         
         # await self.tree.sync()
 

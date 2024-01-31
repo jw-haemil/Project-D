@@ -5,7 +5,7 @@ import random
 import time
 from datetime import datetime, timedelta
 
-from classes.bot import Bot, Cog
+from src.classes.bot import Bot, Cog
 
 
 class Finance(Cog):

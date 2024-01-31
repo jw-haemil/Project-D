@@ -5,4 +5,4 @@ WORKDIR /data
 
 RUN pip install -r requirements.txt
 
-CMD [ "./run.sh" ]
+CMD [ "python3", "-m", "src.main" ]

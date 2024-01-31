@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from classes.bot import Bot, Cog
+from src.classes.bot import Bot, Cog
 
 
 class LifeConvenience(Cog): ...

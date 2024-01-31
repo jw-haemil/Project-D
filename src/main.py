@@ -6,7 +6,7 @@ import logging
 
 from datetime import datetime
 
-from classes.bot import Bot
+from src.classes.bot import Bot
 
 dotenv.load_dotenv() # .env 파일 로드
 
