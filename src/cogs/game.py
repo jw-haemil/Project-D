@@ -47,13 +47,13 @@ class Game(Cog):
     @coin_flip.error
     async def coin_flip_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply("동전 면과 베팅금액을 입력해 주세요.")
+            await ctx.reply("동전의 면과 베팅금액을 입력해 주세요.")
 
         elif isinstance(error, commands.BadLiteralArgument):
             await ctx.reply("**앞** 또는 **뒤** 중에 하나를 입력해 주세요.")
 
         elif isinstance(error, commands.BadArgument):
-            await ctx.reply("베팅금액은 숫자로 입력해 주세요.")
+            await ctx.reply("베팅금액은 정수로 입력해 주세요.")
 
         else:
             await ctx.send(f"오류가 발생했습니다.\n```{type(error)}: {error}```")
