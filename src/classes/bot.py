@@ -46,7 +46,7 @@ class Bot(commands.Bot):
         self.logger.info(f"{self.user} 봇 준비 완료")
         await self.change_presence(
             status=discord.Status.online,
-            activity=discord.Game("봇 테스트"), # 봇 상태 메시지 설정
+            activity=discord.Game(os.environ.get("BOT_ACTIVITY")), # 봇 상태 메시지 설정
         )
     
     async def on_message(self, message: discord.Message):
