@@ -36,7 +36,7 @@ bot = Bot()
     description="Cog를 리로드합니다.",
 )
 async def reload_cog(ctx: commands.Context):
-    bot.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+    bot.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
     await ctx.defer()
 
     for filename in os.listdir("./src/cogs"):

@@ -11,7 +11,7 @@ class UserManagement(Cog):
         description="데이터베이스에 사용자를 등록합니다."
     )
     async def register_user(self, ctx: commands.Context):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         if await user_info.is_valid_user():
