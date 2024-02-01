@@ -11,7 +11,7 @@ from src.classes.bot import Bot, Cog
 class Finance(Cog):
     @commands.command(
         name="내자산",
-        aliases=["돈", "자산", "잔액", "잔고"],
+        aliases=["돈", "자산", "잔액", "잔고", "ㄷ"],
         description="내 자산, 타인의 자산을 확인합니다."
     )
     async def asset_info(self, ctx: commands.Context, other_user: discord.User = None):
@@ -39,9 +39,9 @@ class Finance(Cog):
 
 
     @commands.command(
-        name="출석체크",
-        aliases=["출첵", "ㅊㅊ"],
-        description="출석체크를 합니다."
+        name="돈받기",
+        aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
+        description="돈을 받습니다."
     )
     async def attendance(self, ctx: commands.Context):
         self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
@@ -52,19 +52,19 @@ class Finance(Cog):
             return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
-        if (check_time + timedelta(days=1)).date() <= (datetime.utcnow() + timedelta(hours=9)).date(): # 시간 비교
+        if (check_time + timedelta(hours=1)) <= datetime.utcnow(): # 시간 비교
             if random.random() < 0.001:
-                money = 5000
-                await ctx.reply(f"출석체크 완료! 축하합니다! 0.1% 확률을 뚫고 5,000원을 받았습니다.")
+                money = 50000
+                await ctx.reply(f"축하합니다!🎉 0.1% 확률을 뚫고 50,000원을 받았습니다.")
             else:
-                money = random.randint(1, 10) * 100
-                await ctx.reply(f"출석체크 완료! {money:,}원을 받았습니다.")
+                money = random.randint(1, 10) * 1000
+                await ctx.reply(f"{money:,}원을 받았습니다.")
 
             await user_info.add_money(money) # 돈 추가
-            await user_info.set_check_time(int((datetime.utcnow() + timedelta(hours=9)).timestamp())) # 출석체크 시간 업데이트
+            await user_info.set_check_time(int(datetime.now().timestamp())) # 출석체크 시간 업데이트
 
         else:
-            await ctx.reply("출석체크는 하루에 한 번만 가능합니다.")
+            await ctx.reply("출석체크는 시간당 한 번만 가능합니다.")
 
 
     @commands.command(
