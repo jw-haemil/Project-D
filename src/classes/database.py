@@ -66,7 +66,7 @@ class DataSQL():
             return True
         return False
     
-    async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list:
+    async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list | None:
         logger.debug(f"Query: {query}, Args: {args}")
 
         async with self.pool.acquire() as conn: # poll에 접속
@@ -240,7 +240,8 @@ class UserInfo():
         Args:
             money (int): 돈
         """
-        await self.set_money(await self.get_money() + money)
+        # await self.set_money(await self.get_money() + money)
+        await self._database._query("UPDATE user_info SET money=money+%s WHERE id=%s", (money, self._user_id))
 
     async def get_check_time(self) -> int | None:
         """|coro|
