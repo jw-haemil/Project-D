@@ -64,7 +64,7 @@ class Finance(Cog):
             await user_info.set_check_time(int((datetime.utcnow() + timedelta(hours=9)).timestamp())) # 출석체크 시간 업데이트
 
         else:
-            await ctx.send("출석체크는 하루에 한 번만 가능합니다.")
+            await ctx.reply("출석체크는 하루에 한 번만 가능합니다.")
 
 
     @commands.command(
