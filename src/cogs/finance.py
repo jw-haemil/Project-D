@@ -13,7 +13,7 @@ class Finance(Cog):
         aliases=["돈", "자산", "잔액", "잔고", "ㄷ"],
         description="내 자산, 타인의 자산을 확인합니다."
     )
-    async def asset_info(self, ctx: commands.Context, other_user: discord.User = None):
+    async def asset_info(self, ctx: commands.Context, other_user: discord.Member = None):
         self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         if other_user == ctx.author or other_user is None:
@@ -101,7 +101,7 @@ class Finance(Cog):
         name="송금",
         description="다른 사람에게 돈을 보냅니다."
     )
-    async def send_money(self, ctx: commands.Context, other_user: discord.User, money: int):
+    async def send_money(self, ctx: commands.Context, other_user: discord.Member, money: int):
         self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         user_info = self.bot.database.get_user_info(ctx.author.id)
@@ -133,10 +133,8 @@ class Finance(Cog):
     async def send_money_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
-        elif isinstance(error, commands.UserNotFound):
-            await ctx.reply("보낼 사람을 찾을 수 없습니다.")
         elif isinstance(error, commands.BadArgument):
-            await ctx.reply("보낼 사람과 돈은 정수로 입력해 주세요.")
+            await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")
         else:
             await ctx.reply("오류가 발생했습니다.")
             raise error
