@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 
 import random
-import time
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
@@ -11,7 +10,7 @@ from src.classes.bot import Bot, Cog
 class Finance(Cog):
     @commands.command(
         name="내자산",
-        aliases=["돈", "자산", "잔액", "잔고"],
+        aliases=["돈", "자산", "잔액", "잔고", "ㄷ"],
         description="내 자산, 타인의 자산을 확인합니다."
     )
     async def asset_info(self, ctx: commands.Context, other_user: discord.User = None):
@@ -39,9 +38,38 @@ class Finance(Cog):
 
 
     @commands.command(
-        name="출석체크",
-        aliases=["출첵", "ㅊㅊ"],
-        description="출석체크를 합니다."
+        name="랭킹",
+        aliases=["순위"]
+    )
+    async def ranking(self, ctx: commands.Context):
+        info = tuple( # db에서 유저정보 가져오기
+            map(
+                lambda x: tuple(map(int, x)),
+                await self.bot.database._query(
+                    f"select id, money from user_info where id in ({','.join(['%s'] * len(ctx.guild.members))});",
+                    [member.id for member in ctx.guild.members],
+                    fetch=True
+                )
+            )
+        )
+        info = sorted(info, key=lambda x: x[1], reverse=True)[:10] # 돈 순으로 정렬
+
+        embed = discord.Embed(
+            title="자산랭킹",
+            color=discord.Color.random()
+        )
+        embed.set_footer(text="랭킹은 최대 10명으로 제한됩니다.")
+        for n, (id, money) in enumerate(info):
+            user = ctx.guild.get_member(id)
+            embed.add_field(name=f"{n+1}위", value=f"{user.display_name} ({money:,}원)", inline=False)
+
+        await ctx.reply(embed=embed)
+
+
+    @commands.command(
+        name="돈받기",
+        aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
+        description="돈을 받습니다."
     )
     async def attendance(self, ctx: commands.Context):
         self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
@@ -52,19 +80,21 @@ class Finance(Cog):
             return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
-        if (check_time + timedelta(days=1)).date() <= (datetime.utcnow() + timedelta(hours=9)).date(): # 시간 비교
+        if (check_time + timedelta(hours=1)) <= datetime.utcnow(): # 시간 비교
             if random.random() < 0.001:
-                money = 5000
-                await ctx.reply(f"출석체크 완료! 축하합니다! 0.1% 확률을 뚫고 5,000원을 받았습니다.")
+                money = 50000
+                message = f"축하합니다!🎉 0.1% 확률을 뚫고 50,000원을 받았습니다."
             else:
-                money = random.randint(1, 10) * 100
-                await ctx.reply(f"출석체크 완료! {money:,}원을 받았습니다.")
+                money = random.randint(1, 10) * 1000
+                message = f"{money:,}원을 받았습니다."
+            message += f"\n다음 돈받기 시간: <t:{int((datetime.now() + timedelta(hours=1)).timestamp())}:T>"
 
             await user_info.add_money(money) # 돈 추가
-            await user_info.set_check_time(int((datetime.utcnow() + timedelta(hours=9)).timestamp())) # 출석체크 시간 업데이트
+            await user_info.set_check_time(int(datetime.now().timestamp())) # 출석체크 시간 업데이트
+            await ctx.reply(message)
 
         else:
-            await ctx.reply("출석체크는 하루에 한 번만 가능합니다.")
+            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간: <t:{int((check_time + timedelta(hours=10)).timestamp())}:T>")
 
 
     @commands.command(
