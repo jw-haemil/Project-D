@@ -1,9 +1,9 @@
 from discord.ext import commands
+from discord.utils import stream_supports_colour, _ColourFormatter
 
 import os
 import dotenv
 import logging
-
 from datetime import datetime
 
 from src.classes.bot import Bot
@@ -11,21 +11,32 @@ from src.classes.bot import Bot
 dotenv.load_dotenv() # .env 파일 로드
 
 
-# 로그 파일 설정
-handler = logging.FileHandler(
+# 스트림 로그 설정
+stream_handler = logging.StreamHandler()
+if isinstance(stream_handler, logging.StreamHandler) and stream_supports_colour(stream_handler.stream):
+    formatter = _ColourFormatter()
+else:
+    dt_fmt = "%Y-%m-%d %H:%M:%S"
+    formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", dt_fmt, style="{")
+stream_handler.setFormatter(formatter)
+stream_handler.setLevel(logging.INFO)
+
+
+# 파일 로그 설정
+file_handler = logging.FileHandler(
     filename=f"./logs/{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.log",
     encoding="utf-8",
     mode="w"
 )
-handler.setFormatter(
+file_handler.setFormatter(
     logging.Formatter(
         fmt="[{asctime}] [{levelname:<8}] {name}: {message}",
         datefmt="%Y-%m-%d %H:%M:%S",
         style="{"
     )
 )
-handler.setLevel(logging.DEBUG)
-logging.getLogger().addHandler(handler)
+file_handler.setLevel(logging.DEBUG)
+logging.getLogger().addHandler(file_handler)
 
 
 bot = Bot()
@@ -48,5 +59,6 @@ async def reload_cog(ctx: commands.Context):
 
 bot.run(
     token=os.environ.get("DISCORD_BOT_TOKEN"),
-    log_level=logging.INFO
+    log_handler=stream_handler,
+    log_level=logging.DEBUG,
 )
