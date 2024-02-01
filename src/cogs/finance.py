@@ -87,14 +87,14 @@ class Finance(Cog):
             else:
                 money = random.randint(1, 10) * 1000
                 message = f"{money:,}원을 받았습니다."
-            message += f"\n다음 돈받기 시간: <t:{int((datetime.now() + timedelta(hours=1)).timestamp())}:T>"
+            message += f"\n다음 돈받기 시간은 <t:{int((datetime.now() + timedelta(hours=1)).timestamp())}:T> 입니다."
 
             await user_info.add_money(money) # 돈 추가
             await user_info.set_check_time(int(datetime.now().timestamp())) # 출석체크 시간 업데이트
             await ctx.reply(message)
 
         else:
-            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간: <t:{int((check_time + timedelta(hours=10)).timestamp())}:T>")
+            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=10)).timestamp())}:T> 입니다.")
 
 
     @commands.command(
