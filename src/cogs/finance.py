@@ -133,10 +133,8 @@ class Finance(Cog):
     async def send_money_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
-        elif isinstance(error, commands.UserNotFound):
-            await ctx.reply("보낼 사람을 찾을 수 없습니다.")
         elif isinstance(error, commands.BadArgument):
-            await ctx.reply("보낼 사람과 돈은 정수로 입력해 주세요.")
+            await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")
         else:
             await ctx.reply("오류가 발생했습니다.")
             raise error
