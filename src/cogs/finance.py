@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 
 import random
-import time
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
@@ -35,6 +34,35 @@ class Finance(Cog):
             color=discord.Color.random()
         )
         embed.add_field(name="자산", value=f"{await user_info.get_money():,}원")
+        await ctx.reply(embed=embed)
+
+
+    @commands.command(
+        name="랭킹",
+        aliases=["순위"]
+    )
+    async def ranking(self, ctx: commands.Context):
+        info = tuple( # db에서 유저정보 가져오기
+            map(
+                lambda x: tuple(map(int, x)),
+                await self.bot.database._query(
+                    f"select id, money from user_info where id in ({','.join(['%s'] * len(ctx.guild.members))});",
+                    [member.id for member in ctx.guild.members],
+                    fetch=True
+                )
+            )
+        )
+        info = sorted(info, key=lambda x: x[1], reverse=True)[:10] # 돈 순으로 정렬
+
+        embed = discord.Embed(
+            title="자산랭킹",
+            color=discord.Color.random()
+        )
+        embed.set_footer(text="랭킹은 최대 10명으로 제한됩니다.")
+        for n, (id, money) in enumerate(info):
+            user = ctx.guild.get_member(id)
+            embed.add_field(name=f"{n+1}위", value=f"{user.display_name} ({money:,}원)", inline=False)
+
         await ctx.reply(embed=embed)
 
 
