@@ -24,7 +24,7 @@ class Game(Cog):
         
         money = await user_info.get_money() if money in ("올인", "모두") else money
         if money > (user_money := await user_info.get_money()): # 돈이 부족하면
-            await ctx.reply(f"돈이 부족합니다. (가지고 있는 돈: {user_money:,}원)")
+            await ctx.reply(f"돈이 부족합니다. (현재 자산: {user_money:,}원)")
             return
         elif money <= 0:
             await ctx.reply("베팅금액은 1원 이상이어야 합니다.")
@@ -35,16 +35,16 @@ class Game(Cog):
             money = 1 if money == 1 else money//2 # 배팅금액 조정
             await user_info.add_money(money) # 돈 추가
             random_face = "뒷" if random_face == "뒤" else random_face
-            await ctx.reply(f"축하합니다! {random_face}면이 나와 {money:,}원을 받았습니다.")
+            await ctx.reply(f"축하합니다! {random_face}면이 나와 {money:,}원을 받았습니다. (현재 자산: {await user_info.get_money():,}원)")
         else:
             random_face = "뒷" if random_face == "뒤" else random_face
             # 확정으로 반 차감, 20% 확률로 모두 잃음
             if money == 1 or random.random() < 0.2:
                 await user_info.add_money(-money) # 돈 차감
-                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 전부를 잃었습니다. ({-money:,}원)")
+                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 전부({-money:,}원)를 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
             else:
                 await user_info.add_money(-(money//2)) # 돈 차감
-                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 절반을 잃었습니다. ({-(money//2):,}원)")
+                await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 절반({-(money//2):,}원)을 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
 
     @coin_flip.error
     async def coin_flip_error(self, ctx: commands.Context, error):
