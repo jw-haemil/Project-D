@@ -94,7 +94,7 @@ class Finance(Cog):
             await ctx.reply(message)
 
         else:
-            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=10)).timestamp())}:T> 입니다.")
+            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=1)).timestamp())}:T> 입니다.")
 
 
     @commands.command(
