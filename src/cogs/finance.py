@@ -80,21 +80,21 @@ class Finance(Cog):
             return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
-        if (check_time + timedelta(hours=1)) <= datetime.utcnow(): # 시간 비교
+        if (check_time + timedelta(hours=3)) <= datetime.utcnow(): # 시간 비교
             if random.random() < 0.001:
                 money = 50000
                 message = f"축하합니다!🎉 0.1% 확률을 뚫고 50,000원을 받았습니다."
             else:
                 money = random.randint(1, 10) * 1000
                 message = f"{money:,}원을 받았습니다."
-            message += f"\n다음 돈받기 시간은 <t:{int((datetime.now() + timedelta(hours=1)).timestamp())}:T> 입니다."
+            message += f"\n다음 돈받기 시간은 <t:{int((datetime.now() + timedelta(hours=3)).timestamp())}:T> 입니다."
 
             await user_info.add_money(money) # 돈 추가
             await user_info.set_check_time(int(datetime.now().timestamp())) # 출석체크 시간 업데이트
             await ctx.reply(message)
 
         else:
-            await ctx.reply(f"돈받기는 시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=1)).timestamp())}:T> 입니다.")
+            await ctx.reply(f"돈받기는 3시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=3)).timestamp())}:T> 입니다.")
 
 
     @commands.command(
