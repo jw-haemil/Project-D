@@ -17,7 +17,11 @@ if isinstance(stream_handler, logging.StreamHandler) and stream_supports_colour(
     formatter = _ColourFormatter()
 else:
     dt_fmt = "%Y-%m-%d %H:%M:%S"
-    formatter = logging.Formatter("[{asctime}] [{levelname:<8}] {name}: {message}", dt_fmt, style="{")
+    formatter = logging.Formatter(
+        "[{asctime}] [{levelname:<8}] {name}: {message}",
+        dt_fmt,
+        style="{"
+    )
 stream_handler.setFormatter(formatter)
 stream_handler.setLevel(logging.INFO)
 
@@ -30,7 +34,7 @@ file_handler = logging.FileHandler(
 )
 file_handler.setFormatter(
     logging.Formatter(
-        fmt="[{asctime}] [{levelname:<8}] {name}: {message}",
+        fmt="[{asctime}] [{levelname:<8}]: <{name}> [{funcName} | {lineno}] >> {message}",
         datefmt="%Y-%m-%d %H:%M:%S",
         style="{"
     )
@@ -47,13 +51,13 @@ bot = Bot()
     description="Cog를 리로드합니다.",
 )
 async def reload_cog(ctx: commands.Context):
-    bot.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+    bot.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
     await ctx.defer()
 
     for filename in os.listdir("./src/cogs"):
         if filename.endswith(".py") and not filename.startswith("_"):
             await bot.reload_extension(f"src.cogs.{filename[:-3]}")
-            bot.logger.debug(f"리로드 완료: src.cogs.{filename[:-3]}")
+            bot.logger.info(f"리로드 완료: src.cogs.{filename[:-3]}")
 
     await ctx.send("Cog를 리로드했습니다.")
 
