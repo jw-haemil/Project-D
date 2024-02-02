@@ -169,7 +169,17 @@ class UserInfo():
     def __init__(self, database: DataSQL, user_id: int) -> None:
         self._database = database
         self._user_id = user_id
-    
+
+    @property
+    def id(self) -> int:
+        """유저 아이디를 반환힙니다.
+
+        Returns:
+            int: 유저 아이디
+        """
+        return self._user_id
+
+
     async def is_valid_user(self) -> bool:
         """|coro|
         유저 정보가 유효한지 확인합니다.
@@ -180,6 +190,7 @@ class UserInfo():
         Returns:
             bool: 유효 여부
         """
+        logger.debug(f"Checking if user {self._user_id} is valid")
         return await self._database.count("user_info", {"id": self._user_id}) > 0
 
     async def add_user(self) -> None:
@@ -189,6 +200,7 @@ class UserInfo():
         Args:
             user_id (int): 유저 아이디
         """
+        logger.debug(f"Adding user {self._user_id}")
         await self._database.insert(
             table="user_info",
             data={
@@ -204,15 +216,8 @@ class UserInfo():
         Args:
             user_id (int): 유저 아이디
         """
+        logger.debug(f"Deleting user {self._user_id}")
         await self._database.delete(table="user_info", user_id=self._user_id)
-
-    def get_id(self) -> int:
-        """유저 아이디를 반환힙니다.
-
-        Returns:
-            int: 유저 아이디
-        """
-        return self._user_id
 
     async def get_money(self) -> int:
         """|coro|
@@ -221,6 +226,7 @@ class UserInfo():
         Returns:
             int: 돈
         """
+        logger.debug(f"Getting money of user {self._user_id}")
         result = await self._database.select(table="user_info", user_id=self._user_id)
         return int(result[0][1])
     
@@ -231,6 +237,7 @@ class UserInfo():
         Args:
             money (int): 돈
         """
+        logger.debug(f"Setting money of user {self._user_id}")
         await self._database.update(table="user_info", data={"money": money}, user_id=self._user_id)
 
     async def add_money(self, money: int) -> None:
@@ -240,7 +247,7 @@ class UserInfo():
         Args:
             money (int): 돈
         """
-        # await self.set_money(await self.get_money() + money)
+        logger.debug(f"Adding money of user {self._user_id}")
         await self._database._query("UPDATE user_info SET money=money+%s WHERE id=%s", (money, self._user_id))
 
     async def get_check_time(self) -> int | None:
@@ -250,6 +257,7 @@ class UserInfo():
         Returns:
             int: 최근 출석체크 시간
         """
+        logger.debug(f"Getting check time of user {self._user_id}")
         result = await self._database.select(table="user_info", user_id=self._user_id)
         return int(result[0][2])
     
@@ -260,4 +268,5 @@ class UserInfo():
         Args:
             check_time (int): 최근 출석체크 시간
         """
+        logger.debug(f"Setting check time of user {self._user_id}")
         await self._database.update(table="user_info", data={"check_time": check_time}, user_id=self._user_id)

@@ -5,6 +5,7 @@ import random
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
+from src.classes.bot_checks import Checks, CheckErrors
 
 
 class Finance(Cog):
@@ -14,20 +15,15 @@ class Finance(Cog):
         description="내 자산, 타인의 자산을 확인합니다."
     )
     async def asset_info(self, ctx: commands.Context, other_user: discord.Member = None):
-        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        user = ctx.author if other_user is None or other_user == ctx.author else other_user
+        user_info = self.bot.database.get_user_info(user.id)
 
-        if other_user == ctx.author or other_user is None:
-            user = ctx.author
-            user_info = self.bot.database.get_user_info(user.id)
-            if not await user_info.is_valid_user():
+        if not await user_info.is_valid_user():
+            if user is ctx.author:
                 await ctx.reply("사용자 등록을 먼저 해 주세요.")
-                return
-        else:
-            user = other_user
-            user_info = self.bot.database.get_user_info(user.id)
-            if not await user_info.is_valid_user():
+            else:
                 await ctx.reply(f"{other_user.display_name}님은 등록되어 있지 않은 유저입니다.")
-                return
+            return
 
         embed = discord.Embed(
             title=f"{user.display_name}님의 자산정보",
@@ -71,13 +67,9 @@ class Finance(Cog):
         aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
         description="돈을 받습니다."
     )
+    @Checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context):
-        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
-
-        if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
-            await ctx.reply("사용자 등록을 먼저 해 주세요.")
-            return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
         if (check_time + timedelta(hours=3)) <= datetime.utcnow(): # 시간 비교
@@ -101,16 +93,12 @@ class Finance(Cog):
         name="송금",
         description="다른 사람에게 돈을 보냅니다."
     )
+    @Checks.is_registered() # 사용자 등록 여부 확인
     async def send_money(self, ctx: commands.Context, other_user: discord.Member, money: int):
-        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
-
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)
 
-        if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
-            await ctx.reply("사용자 등록을 먼저 해 주세요.")
-            return
-        elif not await other_user_info.is_valid_user(): # 사용자 등록 여부 확인
+        if not await other_user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply(f"{other_user.display_name}님은 등록되어 있지 않은 유저입니다.")
             return
         elif other_user.id == ctx.author.id: # 자기 자신에게 돈을 송금하는 경우 예외처리
@@ -130,8 +118,9 @@ class Finance(Cog):
         await ctx.reply(f"{other_user.display_name}님에게 {money:,}원을 송금했습니다.")
 
     @send_money.error
-    async def send_money_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def send_money_error(self, ctx: commands.Context[Bot], error):
+        if isinstance(error, CheckErrors.NotRegisteredUser): ...
+        elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
         elif isinstance(error, commands.BadArgument):
             await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")

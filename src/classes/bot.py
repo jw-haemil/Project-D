@@ -5,19 +5,20 @@ import os
 import logging
 
 from src.classes.database import DataSQL
+from src.classes.bot_checks import CheckErrors
 
 
 class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
     
     def __init__(self):
-        self.logger = logging.getLogger("discord.bot") # 로깅 설정
+        self.logger = logging.getLogger("discord.classes.Bot") # 로깅 설정
         self.database = None
-        
+
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
-        
+
         super().__init__(
             command_prefix=";", # 봇 접두사
             intents=intents, # 봇 기능 설정
@@ -50,7 +51,7 @@ class Bot(commands.Bot):
             status=discord.Status.online,
             activity=discord.Game(os.environ.get("BOT_ACTIVITY")), # 봇 상태 메시지 설정
         )
-    
+
     async def on_message(self, message: discord.Message):
         if message.guild is None: # DM은 무시
             return
@@ -60,9 +61,11 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass
+        elif isinstance(error, CheckErrors.NotRegisteredUser):
+            await ctx.reply("사용자 등록을 먼저 해 주세요.")
         else:
             await super().on_command_error(ctx, error) # 기본 오류 처리
-    
+
     async def close(self) -> None:
         if self.database is not None:
             await self.database.close()
@@ -74,10 +77,13 @@ class Cog(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"discord.bot.{self.__class__.__name__}")
+        self.logger = logging.getLogger(f"discord.cog.{self.__class__.__name__}")
 
         self.bot.logger.debug(f"Cog {self.__class__.__name__} loaded")
 
+    # 명령어가 실행되기 전 실행되는 함수
+    async def cog_before_invoke(self, ctx: commands.Context[Bot]):
+        self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
 
 class HelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):
