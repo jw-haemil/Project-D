@@ -16,18 +16,15 @@ class Finance(Cog):
     async def asset_info(self, ctx: commands.Context, other_user: discord.Member = None):
         self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
-        if other_user == ctx.author or other_user is None:
-            user = ctx.author
-            user_info = self.bot.database.get_user_info(user.id)
-            if not await user_info.is_valid_user():
+        user = ctx.author if other_user is None or other_user == ctx.author else other_user
+        user_info = self.bot.database.get_user_info(user.id)
+
+        if not await user_info.is_valid_user():
+            if user is ctx.author:
                 await ctx.reply("사용자 등록을 먼저 해 주세요.")
-                return
-        else:
-            user = other_user
-            user_info = self.bot.database.get_user_info(user.id)
-            if not await user_info.is_valid_user():
+            else:
                 await ctx.reply(f"{other_user.display_name}님은 등록되어 있지 않은 유저입니다.")
-                return
+            return
 
         embed = discord.Embed(
             title=f"{user.display_name}님의 자산정보",
