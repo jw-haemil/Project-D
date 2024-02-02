@@ -1,5 +1,9 @@
 from discord.ext import commands
 
+import logging
+logger = logging.getLogger("discord.classes.Checks")
+
+
 class CheckErrors(commands.CheckFailure):
     class NotRegisteredUser(commands.CheckFailure): ...
 
@@ -11,6 +15,7 @@ class Checks():
     def is_registered():
         """DB에 사용자가 등록되어있는지 확인"""
         async def predicate(ctx: commands.Context):
+            logger.debug(f"Checking if {ctx.author.id} is registered")
             info = ctx.bot.database.get_user_info(ctx.author.id)
             if await info.is_valid_user():
                 return True
