@@ -5,6 +5,7 @@ import os
 import logging
 
 from src.classes.database import DataSQL
+from src.classes.bot_checks import CheckErrors
 
 
 class Bot(commands.Bot):
@@ -50,7 +51,7 @@ class Bot(commands.Bot):
             status=discord.Status.online,
             activity=discord.Game(os.environ.get("BOT_ACTIVITY")), # 봇 상태 메시지 설정
         )
-    
+
     async def on_message(self, message: discord.Message):
         if message.guild is None: # DM은 무시
             return
@@ -60,9 +61,11 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass
+        elif isinstance(error, CheckErrors.NotRegisteredUser):
+            await ctx.reply("사용자 등록을 먼저 해 주세요.")
         else:
             await super().on_command_error(ctx, error) # 기본 오류 처리
-    
+
     async def close(self) -> None:
         if self.database is not None:
             await self.database.close()

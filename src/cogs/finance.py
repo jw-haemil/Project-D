@@ -5,6 +5,7 @@ import random
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
+from src.classes.bot_checks import Checks
 
 
 class Finance(Cog):
@@ -68,13 +69,10 @@ class Finance(Cog):
         aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
         description="돈을 받습니다."
     )
+    @Checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context):
         self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
-
-        if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
-            await ctx.reply("사용자 등록을 먼저 해 주세요.")
-            return
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
         if (check_time + timedelta(hours=3)) <= datetime.utcnow(): # 시간 비교
