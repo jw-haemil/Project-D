@@ -12,13 +12,13 @@ class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
     
     def __init__(self):
-        self.logger = logging.getLogger("discord.bot") # 로깅 설정
+        self.logger = logging.getLogger("discord.classes.Bot") # 로깅 설정
         self.database = None
-        
+
         intents = discord.Intents.default()
         intents.message_content = True
         intents.members = True
-        
+
         super().__init__(
             command_prefix=";", # 봇 접두사
             intents=intents, # 봇 기능 설정
@@ -77,7 +77,7 @@ class Cog(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
-        self.logger = logging.getLogger(f"discord.bot.{self.__class__.__name__}")
+        self.logger = logging.getLogger(f"discord.cog.{self.__class__.__name__}")
 
         self.bot.logger.debug(f"Cog {self.__class__.__name__} loaded")
 
