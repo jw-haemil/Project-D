@@ -5,7 +5,7 @@ import random
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
-from src.classes.bot_checks import Checks
+from src.classes.bot_checks import Checks, CheckErrors
 
 
 class Finance(Cog):
@@ -93,14 +93,12 @@ class Finance(Cog):
         name="송금",
         description="다른 사람에게 돈을 보냅니다."
     )
+    @Checks.is_registered() # 사용자 등록 여부 확인
     async def send_money(self, ctx: commands.Context, other_user: discord.Member, money: int):
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)
 
-        if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
-            await ctx.reply("사용자 등록을 먼저 해 주세요.")
-            return
-        elif not await other_user_info.is_valid_user(): # 사용자 등록 여부 확인
+        if not await other_user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply(f"{other_user.display_name}님은 등록되어 있지 않은 유저입니다.")
             return
         elif other_user.id == ctx.author.id: # 자기 자신에게 돈을 송금하는 경우 예외처리
@@ -120,8 +118,9 @@ class Finance(Cog):
         await ctx.reply(f"{other_user.display_name}님에게 {money:,}원을 송금했습니다.")
 
     @send_money.error
-    async def send_money_error(self, ctx: commands.Context, error):
-        if isinstance(error, commands.MissingRequiredArgument):
+    async def send_money_error(self, ctx: commands.Context[Bot], error):
+        if isinstance(error, CheckErrors.NotRegisteredUser): ...
+        elif isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
         elif isinstance(error, commands.BadArgument):
             await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")
