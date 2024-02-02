@@ -34,7 +34,7 @@ file_handler = logging.FileHandler(
 )
 file_handler.setFormatter(
     logging.Formatter(
-        fmt="[{asctime}] {levelname:<8}: <{name}> [{funcName} | {lineno}] >> {message}",
+        fmt="[{asctime}] {levelname:<8} <{name}> [{funcName} | {lineno}] >> {message}",
         datefmt="%Y-%m-%d %H:%M:%S",
         style="{"
     )
