@@ -15,8 +15,6 @@ class Finance(Cog):
         description="내 자산, 타인의 자산을 확인합니다."
     )
     async def asset_info(self, ctx: commands.Context, other_user: discord.Member = None):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
-
         user = ctx.author if other_user is None or other_user == ctx.author else other_user
         user_info = self.bot.database.get_user_info(user.id)
 
@@ -71,7 +69,6 @@ class Finance(Cog):
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
@@ -97,8 +94,6 @@ class Finance(Cog):
         description="다른 사람에게 돈을 보냅니다."
     )
     async def send_money(self, ctx: commands.Context, other_user: discord.Member, money: int):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
-
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)
 
