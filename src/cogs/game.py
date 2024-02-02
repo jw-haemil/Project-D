@@ -14,7 +14,7 @@ class Game(Cog):
         description="금액을 걸고 동전 던지기 게임을 시작합니다."
     )
     async def coin_flip(self, ctx: commands.Context, face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
-        self.logger.debug(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
+        self.logger.info(f"{ctx.author}({ctx.author.id}) -> {ctx.message.content}")
 
         user_info = self.bot.database.get_user_info(ctx.author.id)
         
@@ -58,7 +58,7 @@ class Game(Cog):
             await ctx.reply("베팅금액은 정수 또는 `올인`, `모두`로 입력해 주세요.")
 
         else:
-            await ctx.send(f"오류가 발생했습니다.\n```{type(error)}: {error}```")
+            await ctx.send(f"오류가 발생했습니다.")
 
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가
