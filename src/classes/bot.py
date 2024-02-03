@@ -83,7 +83,7 @@ class Cog(commands.Cog):
 
     # 명령어가 실행되기 전 실행되는 함수
     async def cog_before_invoke(self, ctx: commands.Context[Bot]):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
+        self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
 
 class HelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):

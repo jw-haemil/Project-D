@@ -35,14 +35,14 @@ class Finance(Cog):
 
     @commands.command(
         name="랭킹",
-        aliases=["순위"]
+        aliases=["순위", "ㄹㅋ"]
     )
     async def ranking(self, ctx: commands.Context):
         info = tuple( # db에서 유저정보 가져오기
             map(
                 lambda x: tuple(map(int, x)),
                 await self.bot.database._query(
-                    f"select id, money from user_info where id in ({','.join(['%s'] * len(ctx.guild.members))});",
+                    f"SELECT id, money FROM user_info WHERE id IN ({','.join(['%s'] * len(ctx.guild.members))});",
                     [member.id for member in ctx.guild.members],
                     fetch=True
                 )
@@ -91,6 +91,7 @@ class Finance(Cog):
 
     @commands.command(
         name="송금",
+        aliases=["ㅅㄱ"],
         description="다른 사람에게 돈을 보냅니다."
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
