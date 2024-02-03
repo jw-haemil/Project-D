@@ -35,7 +35,7 @@ class Finance(Cog):
 
     @commands.command(
         name="랭킹",
-        aliases=["순위"]
+        aliases=["순위", "ㄹㅋ"]
     )
     async def ranking(self, ctx: commands.Context):
         info = tuple( # db에서 유저정보 가져오기
