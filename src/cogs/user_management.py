@@ -10,7 +10,7 @@ class UserManagement(Cog):
         aliases=["등록"],
         description="데이터베이스에 사용자를 등록합니다."
     )
-    async def register_user(self, ctx: commands.Context):
+    async def register_user(self, ctx: commands.Context[Bot]):
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         if await user_info.is_valid_user():

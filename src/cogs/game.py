@@ -13,7 +13,7 @@ class Game(Cog):
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
         description="금액을 걸고 동전 던지기 게임을 시작합니다."
     )
-    async def coin_flip(self, ctx: commands.Context, face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
+    async def coin_flip(self, ctx: commands.Context[Bot], face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
         user_info = self.bot.database.get_user_info(ctx.author.id)
         
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
@@ -45,7 +45,7 @@ class Game(Cog):
                 await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 절반({-(money//2):,}원)을 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
 
     @coin_flip.error
-    async def coin_flip_error(self, ctx: commands.Context, error):
+    async def coin_flip_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("동전의 면과 베팅금액을 입력해 주세요.")
 

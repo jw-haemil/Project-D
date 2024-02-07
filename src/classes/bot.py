@@ -5,8 +5,7 @@ import os
 import logging
 
 from src.classes.database import DataSQL
-from src.classes.bot_checks import CheckErrors
-
+from src.classes.errors import NotRegisteredUser
 
 class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
@@ -61,7 +60,7 @@ class Bot(commands.Bot):
     async def on_command_error(self, ctx: commands.Context["Bot"], error: commands.CommandError):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass
-        elif isinstance(error, CheckErrors.NotRegisteredUser):
+        elif isinstance(error, NotRegisteredUser):
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
         else:
             if self.extra_events.get('on_command_error', None):

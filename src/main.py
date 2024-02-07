@@ -50,7 +50,7 @@ bot = Bot()
     name="리로드",
     description="Cog를 리로드합니다.",
 )
-async def reload_cog(ctx: commands.Context):
+async def reload_cog(ctx: commands.Context[Bot]):
     bot.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
     await ctx.defer()
 

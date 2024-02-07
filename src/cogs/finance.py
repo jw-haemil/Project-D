@@ -5,7 +5,8 @@ import random
 from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
-from src.classes.bot_checks import Checks, CheckErrors
+from src.classes.bot_checks import Checks
+from src.classes.errors import NotRegisteredUser
 
 
 class Finance(Cog):
@@ -14,7 +15,7 @@ class Finance(Cog):
         aliases=["돈", "자산", "잔액", "잔고", "ㄷ"],
         description="내 자산, 타인의 자산을 확인합니다."
     )
-    async def asset_info(self, ctx: commands.Context, other_user: discord.Member = None):
+    async def asset_info(self, ctx: commands.Context[Bot], other_user: discord.Member = None):
         user = ctx.author if other_user is None or other_user == ctx.author else other_user
         user_info = self.bot.database.get_user_info(user.id)
 
@@ -37,7 +38,7 @@ class Finance(Cog):
         name="랭킹",
         aliases=["순위", "ㄹㅋ"]
     )
-    async def ranking(self, ctx: commands.Context):
+    async def ranking(self, ctx: commands.Context[Bot]):
         info = tuple( # db에서 유저정보 가져오기
             map(
                 lambda x: tuple(map(int, x)),
@@ -68,7 +69,7 @@ class Finance(Cog):
         description="돈을 받습니다."
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
-    async def attendance(self, ctx: commands.Context):
+    async def attendance(self, ctx: commands.Context[Bot]):
         user_info = self.bot.database.get_user_info(ctx.author.id)
 
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
@@ -95,7 +96,7 @@ class Finance(Cog):
         description="다른 사람에게 돈을 보냅니다."
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
-    async def send_money(self, ctx: commands.Context, other_user: discord.Member, money: int):
+    async def send_money(self, ctx: commands.Context[Bot], other_user: discord.Member, money: int):
         user_info = self.bot.database.get_user_info(ctx.author.id)
         other_user_info = self.bot.database.get_user_info(other_user.id)
 
@@ -119,9 +120,8 @@ class Finance(Cog):
         await ctx.reply(f"{other_user.display_name}님에게 {money:,}원을 송금했습니다.")
 
     @send_money.error
-    async def send_money_error(self, ctx: commands.Context[Bot], error):
-        if isinstance(error, CheckErrors.NotRegisteredUser): ...
-        elif isinstance(error, commands.MissingRequiredArgument):
+    async def send_money_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
+        if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
         elif isinstance(error, commands.BadArgument):
             await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")

@@ -76,7 +76,7 @@ class Fishing(Cog):
         await message.clear_reactions()
 
     @fishing.error
-    async def fishing_error(self, ctx: commands.Context[Bot], error):
+    async def fishing_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
         if ctx.author in self.fishing_users:
             self.remove_fishing_user(ctx.author)
 

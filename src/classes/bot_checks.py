@@ -1,12 +1,11 @@
 from discord.ext import commands
 
 import logging
+
+from src.classes.bot import Bot
+from src.classes.errors import NotRegisteredUser
+
 logger = logging.getLogger("discord.classes.Checks")
-
-
-class CheckErrors(commands.CheckFailure):
-    class NotRegisteredUser(commands.CheckFailure): ...
-
 
 class Checks():
     """명령어 체크"""
@@ -14,7 +13,7 @@ class Checks():
     @staticmethod
     def is_registered():
         """DB에 사용자가 등록되어있는지 확인"""
-        async def predicate(ctx: commands.Context):
+        async def predicate(ctx: commands.Context[Bot]):
             if ctx.invoked_with == "help": # help 명령어 실행시 체크 안함.
                 return False
 
@@ -23,6 +22,6 @@ class Checks():
             if await info.is_valid_user():
                 return True
             else:
-                raise CheckErrors.NotRegisteredUser("등록되어 있지 않은 유저")
+                raise NotRegisteredUser("등록되어 있지 않은 유저")
         
         return commands.check(predicate)
