@@ -77,6 +77,7 @@ class DataSQL():
                     return None
 
     async def select(self, table: str, columns: list[str] = None, user_id: int = None) -> list:
+        # TODO: user_id 대신 여러정보를 입력 가능하게
         """|coro|
         테이블의 데이터를 조회합니다.
 
@@ -96,6 +97,7 @@ class DataSQL():
         return await self._query(query, fetch=True)
 
     async def update(self, table: str, data: dict, user_id: int = None) -> None:
+        # TODO: user_id 대신 여러정보를 입력 가능하게
         """|coro|
         테이블의 데이터를 업데이트합니다.
 
@@ -111,6 +113,7 @@ class DataSQL():
         return await self._query(query, args)
 
     async def delete(self, table: str, user_id: int = None) -> None:
+        # TODO: user_id 대신 여러정보를 입력 가능하게
         """|coro|
         테이블의 데이터를 삭제합니다.
 
