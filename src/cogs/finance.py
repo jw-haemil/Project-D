@@ -127,7 +127,6 @@ class Finance(Cog):
             await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")
         else:
             await ctx.reply("오류가 발생했습니다.")
-            raise error
 
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가

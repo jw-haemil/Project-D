@@ -58,13 +58,25 @@ class Bot(commands.Bot):
 
         await self.process_commands(message) # 명령어 처리
 
-    async def on_command_error(self, ctx: commands.Context, error):
+    async def on_command_error(self, ctx: commands.Context["Bot"], error: commands.CommandError):
         if isinstance(error, commands.CommandNotFound): # 사용자가 잘못된 명령어를 입력했을 때
             pass
         elif isinstance(error, CheckErrors.NotRegisteredUser):
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
         else:
-            await super().on_command_error(ctx, error) # 기본 오류 처리
+            if self.extra_events.get('on_command_error', None):
+                return
+
+            # error_handler 무시
+            # command = ctx.command
+            # if command and command.has_error_handler():
+            #     return
+
+            cog = ctx.cog
+            if cog and cog.has_error_handler():
+                return
+
+            self.logger.error('Ignoring exception in command %s', ctx.command, exc_info=error)
 
     async def close(self) -> None:
         if self.database is not None:
