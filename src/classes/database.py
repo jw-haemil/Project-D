@@ -292,6 +292,7 @@ class Fish():
         min_length: int,
         max_length: int,
         default_price: int,
+        const_value: float,
         description: str
 ) -> None:
         self._id = id
@@ -300,10 +301,11 @@ class Fish():
         self._min_length = min_length
         self._max_length = max_length
         self._default_price = default_price
+        self._const_value = const_value
         self._description = description
 
         self._length = random.randint(self._min_length, self._max_length)
-        self._price = self._default_price * self._length
+        self._price = int((self._default_price * self._length) * self._const_value)
 
     @property
     def id(self) -> int:
@@ -397,7 +399,8 @@ class FishInfo():
             min_length=int(row[3]),
             max_length=int(row[4]),
             default_price=int(row[5]),
-            description=row[6]
+            const_value=float(row[6]),
+            description=row[7]
         ) for row in result]
 
     def _choose_grade(self) -> FishRating:
