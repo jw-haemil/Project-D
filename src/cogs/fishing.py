@@ -56,7 +56,7 @@ class Fishing(Cog):
             fish_info = ctx.bot.database.get_fish_info()
 
             fish = await fish_info.get_random_fish()
-            # await user_info.add_money(fish.price)
+            await user_info.add_money(fish.price)
 
             embed = discord.Embed(
                 title=f"{fish.name}",
