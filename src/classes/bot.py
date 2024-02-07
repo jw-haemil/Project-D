@@ -7,9 +7,10 @@ import logging
 from src.classes.database import DataSQL
 from src.classes.errors import NotRegisteredUser
 
+
 class Bot(commands.Bot):
     """project-d의 기반이 되는 봇"""
-    
+
     def __init__(self):
         self.logger = logging.getLogger("discord.classes.Bot") # 로깅 설정
         self.database = None
@@ -41,7 +42,7 @@ class Bot(commands.Bot):
         for filename in os.listdir("./src/cogs"):
             if filename.endswith(".py"):
                 await self.load_extension(f"src.cogs.{filename[:-3]}")
-        
+
         # await self.tree.sync()
 
     async def on_ready(self):
@@ -95,6 +96,7 @@ class Cog(commands.Cog):
     # 명령어가 실행되기 전 실행되는 함수
     async def cog_before_invoke(self, ctx: commands.Context[Bot]):
         self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
+
 
 class HelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):

@@ -7,6 +7,7 @@ from src.classes.errors import NotRegisteredUser
 
 logger = logging.getLogger("discord.classes.Checks")
 
+
 class Checks():
     """명령어 체크"""
 
@@ -23,5 +24,5 @@ class Checks():
                 return True
             else:
                 raise NotRegisteredUser("등록되어 있지 않은 유저")
-        
+
         return commands.check(predicate)

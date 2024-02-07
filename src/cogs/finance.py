@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 
 from src.classes.bot import Bot, Cog
 from src.classes.bot_checks import Checks
-from src.classes.errors import NotRegisteredUser
 
 
 class Finance(Cog):

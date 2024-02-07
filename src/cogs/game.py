@@ -15,11 +15,11 @@ class Game(Cog):
     )
     async def coin_flip(self, ctx: commands.Context[Bot], face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
         user_info = self.bot.database.get_user_info(ctx.author.id)
-        
+
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
             return
-        
+
         money = await user_info.get_money() if money in ("올인", "모두") else money
         if money > (user_money := await user_info.get_money()): # 돈이 부족하면
             await ctx.reply(f"돈이 부족합니다. (현재 자산: {user_money:,}원)")
@@ -61,4 +61,4 @@ class Game(Cog):
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가
     await bot.add_cog(Game(bot))
-    
+

@@ -33,14 +33,10 @@ class DataSQL():
             password (str): 접속 비밀번호
             database (str): 접속할 데이터베이스 이름.
             autocommit (bool, optional): 변경내용 자동반영. Defaults to True.
-        
+
         Return:
             bool: 접속 성공 여부.
         """
-        # self.__auth_user = user
-        # self.__auth_password = password
-        # self.__auth_database = database
-        # self.__auth_autocommit = autocommit
 
         try:
             self.pool: aiomysql.Pool = await aiomysql.create_pool(
@@ -59,7 +55,7 @@ class DataSQL():
         else:
             logger.info("Database connection established")
             return True
-    
+
     async def close(self) -> bool:
         if self.pool is not None:
             self.pool.close()
@@ -68,7 +64,7 @@ class DataSQL():
             logger.info("Database connection closed")
             return True
         return False
-    
+
     async def _query(self, query: str, args: tuple = None, fetch: bool = False) -> list | None:
         logger.debug(f"Query: {query}, Args: {args}")
 
@@ -83,12 +79,12 @@ class DataSQL():
     async def select(self, table: str, columns: list[str] = None, user_id: int = None) -> list:
         """|coro|
         테이블의 데이터를 조회합니다.
-        
+
         Args:
             table (str): 테이블 이름
             columns (list[str], optional): 조회할 컬럼. Defaults to None.
             user_id (int, optional): 유저 아이디. Defaults to None.
-        
+
         Returns:
             list: 조회된 데이터
         """
@@ -155,7 +151,7 @@ class DataSQL():
             query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
         args = tuple(condition.values()) if condition is not None else None
         return (await self._query(query, args, fetch=True))[0][0]
-    
+
     def get_user_info(self, user_id: int) -> "UserInfo":
         """유저 정보를 생성합니다.
 
@@ -240,7 +236,7 @@ class UserInfo():
         logger.debug(f"Getting money of user {self._user_id}")
         result = await self._database.select(table="user_info", user_id=self._user_id)
         return int(result[0][1])
-    
+
     async def set_money(self, money: int) -> None:
         """|coro|
         유저의 돈을 설정합니다.
@@ -271,7 +267,7 @@ class UserInfo():
         logger.debug(f"Getting check time of user {self._user_id}")
         result = await self._database.select(table="user_info", user_id=self._user_id)
         return int(result[0][2])
-    
+
     async def set_check_time(self, check_time: int) -> None:
         """|coro|
         유저의 최근 출석체크 시간을 설정합니다.
@@ -390,7 +386,7 @@ class Fish():
 class FishInfo():
     def __init__(self, database: DataSQL) -> None:
         self._database = database
-    
+
     def _return_value(self, result: list[tuple]) -> list[Fish]:
         return [Fish(
             id=int(row[0]),
