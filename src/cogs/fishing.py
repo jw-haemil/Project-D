@@ -79,6 +79,7 @@ class Fishing(Cog):
     async def fishing_error(self, ctx: commands.Context[Bot], error):
         if ctx.author in self.fishing_users:
             self.remove_fishing_user(ctx.author)
+        self.logger.error("Ignoring exception in command %s", ctx.command, exc_info=error)
 
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가

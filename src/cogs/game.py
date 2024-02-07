@@ -57,6 +57,7 @@ class Game(Cog):
 
         else:
             await ctx.send(f"오류가 발생했습니다.")
+            self.logger.error("Ignoring exception in command %s", ctx.command, exc_info=error)
 
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가
