@@ -286,14 +286,14 @@ class UserInfo():
 class Fish():
     def __init__(
         self,
-        id: int,
-        name: str,
-        rating: int,
-        min_length: int,
-        max_length: int,
-        default_price: int,
-        const_value: float,
-        description: str
+        id: int, # 고유ID
+        name: str, # 물고기 이름
+        rating: int, # 물고기의 등급
+        min_length: int, # 최소길이
+        max_length: int, # 최대길이
+        default_price: int, # 기본가격
+        const_value: float, # 기본가격에 곱할 상수
+        description: str # 물고기 설명
 ) -> None:
         self._id = id
         self._name = name
