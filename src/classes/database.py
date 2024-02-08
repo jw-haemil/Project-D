@@ -1,3 +1,5 @@
+import discord
+
 import asyncio
 import aiomysql
 import logging
@@ -76,15 +78,14 @@ class DataSQL():
                 else:
                     return None
 
-    async def select(self, table: str, columns: list[str] = None, user_id: int = None) -> list:
-        # TODO: user_id 대신 여러정보를 입력 가능하게
+    async def select(self, table: str, columns: list[str] = None, condition: dict = None) -> list:
         """|coro|
         테이블의 데이터를 조회합니다.
 
         Args:
             table (str): 테이블 이름
             columns (list[str], optional): 조회할 컬럼. Defaults to None.
-            user_id (int, optional): 유저 아이디. Defaults to None.
+            condition (dict, optional): 조건. Defaults to None.
 
         Returns:
             list: 조회된 데이터
@@ -92,39 +93,38 @@ class DataSQL():
         if columns is None:
             columns = "*"
         query = f"SELECT {','.join(columns)} FROM {table}"
-        if user_id is not None:
-            query += f" WHERE id={user_id}"
-        return await self._query(query, fetch=True)
+        if condition is not None:
+            query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
+        return await self._query(query, condition.values(), fetch=True)
 
-    async def update(self, table: str, data: dict, user_id: int = None) -> None:
-        # TODO: user_id 대신 여러정보를 입력 가능하게
+    async def update(self, table: str, data: dict, condition: dict = None) -> None:
         """|coro|
         테이블의 데이터를 업데이트합니다.
 
         Args:
             table (str): 테이블 이름
             data (dict): 업데이트할 데이터
-            user_id (int, optional): 유저 아이디. Defaults to None.
+            condition (dict, optional): 조건. Defaults to None.
         """
         query = f"UPDATE {table} SET {','.join([f'{k}=%s' for k in data.keys()])}"
-        if user_id is not None:
-            query += f" WHERE id={user_id}"
-        args = tuple(data.values())
+        if condition is not None:
+            query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
+        args = tuple(data.values()) + tuple(condition.values())
         return await self._query(query, args)
 
-    async def delete(self, table: str, user_id: int = None) -> None:
-        # TODO: user_id 대신 여러정보를 입력 가능하게
+    async def delete(self, table: str, condition: dict = None) -> None:
         """|coro|
         테이블의 데이터를 삭제합니다.
 
         Args:
             table (str): 테이블 이름
-            user_id (int, optional): 유저 아이디. Defaults to None.
+            condition (dict, optional): 조건. Defaults to None.
         """
         query = f"DELETE FROM {table}"
-        if user_id is not None:
-            query += f" WHERE id={user_id}"
-        return await self._query(query)
+        if condition is not None:
+            query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
+        args = tuple(condition.values()) if condition is not None else None
+        return await self._query(query, args)
 
     async def insert(self, table: str, data: dict) -> None:
         """|coro|
@@ -176,9 +176,15 @@ class DataSQL():
 
 
 class UserInfo():
-    def __init__(self, database: DataSQL, user_id: int) -> None:
+    def __init__(self, database: DataSQL, user: int | discord.User | discord.Member) -> None:
         self._database = database
-        self._user_id = user_id
+
+        if isinstance(user, (discord.User, discord.Member)):
+            self._user = user
+            self._user_id = user.id
+        else:
+            self._user = None
+            self._user_id = user
 
     @property
     def id(self) -> int:
@@ -227,7 +233,7 @@ class UserInfo():
             user_id (int): 유저 아이디
         """
         logger.debug(f"Deleting user {self._user_id}")
-        await self._database.delete(table="user_info", user_id=self._user_id)
+        await self._database.delete(table="user_info", condition={"id": self._user_id})
 
     async def get_money(self) -> int:
         """|coro|
@@ -237,8 +243,8 @@ class UserInfo():
             int: 돈
         """
         logger.debug(f"Getting money of user {self._user_id}")
-        result = await self._database.select(table="user_info", user_id=self._user_id)
-        return int(result[0][1])
+        result = await self._database.select(table="user_info", columns=["money"], condition={"id": self._user_id})
+        return int(result[0][0])
 
     async def set_money(self, money: int) -> None:
         """|coro|
@@ -248,7 +254,7 @@ class UserInfo():
             money (int): 돈
         """
         logger.debug(f"Setting money of user {self._user_id}")
-        await self._database.update(table="user_info", data={"money": money}, user_id=self._user_id)
+        await self._database.update(table="user_info", data={"money": money}, condition={"id": self._user_id})
 
     async def add_money(self, money: int) -> None:
         """|coro|
@@ -268,8 +274,8 @@ class UserInfo():
             int: 최근 출석체크 시간
         """
         logger.debug(f"Getting check time of user {self._user_id}")
-        result = await self._database.select(table="user_info", user_id=self._user_id)
-        return int(result[0][2])
+        result = await self._database.select(table="user_info", columns=["check_time"], condition={"id": self._user_id})
+        return int(result[0][0])
 
     async def set_check_time(self, check_time: int) -> None:
         """|coro|
@@ -279,7 +285,7 @@ class UserInfo():
             check_time (int): 최근 출석체크 시간
         """
         logger.debug(f"Setting check time of user {self._user_id}")
-        await self._database.update(table="user_info", data={"check_time": check_time}, user_id=self._user_id)
+        await self._database.update(table="user_info", data={"check_time": check_time}, condition={"id": self._user_id})
 
 
 class Fish():
