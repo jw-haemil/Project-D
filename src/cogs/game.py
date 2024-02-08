@@ -58,9 +58,6 @@ class Game(Cog):
             await ctx.reply("베팅금액은 정수 또는 `올인`, `모두`로 입력해 주세요.")
             ctx.command_failed = False
 
-        else:
-            await ctx.send(f"오류가 발생했습니다.")
-
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가
     await bot.add_cog(Game(bot))

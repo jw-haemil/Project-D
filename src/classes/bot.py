@@ -67,6 +67,7 @@ class Bot(commands.Bot):
 
         else:
             if ctx.command_failed:
+                await ctx.reply("오류가 발생했습니다.")
                 self.logger.error("Ignoring exception in command %s", ctx.command, exc_info=error)
 
     async def close(self) -> None:
