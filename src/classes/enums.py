@@ -16,7 +16,7 @@ fish_embed_color = {
     FishRating.RARE: discord.Color.blue(),
     FishRating.EPIC: discord.Color.purple(),
     FishRating.LEGENDARY: discord.Color.gold(),
-    FishRating.MYTHIC: discord.Color.dark_red()
+    FishRating.MYTHIC: discord.Color.red()
 }
 
 fish_kor_name = {
