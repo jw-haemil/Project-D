@@ -2,6 +2,23 @@ import discord
 from enum import Enum
 
 
+class UserInfoColumns(Enum):
+    ID = 0
+    MONEY = 1
+    CHECK_TIME = 2
+
+
+class FishInfoColumns(Enum):
+    ID = 0
+    NAME = 1
+    RATING = 2
+    MIN_LENGTH = 3
+    MAX_LENGTH = 4
+    DEFAULT_PRICE = 5
+    CONST_VALUE = 6
+    DESCRIPTION = 7
+
+
 class FishRating(Enum):
     COMMON = 0 # 일반
     UNCOMMON = 1 # 고급
