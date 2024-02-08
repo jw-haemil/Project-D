@@ -122,8 +122,12 @@ class Finance(Cog):
     async def send_money_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("보낼 사람과 돈을 입력해 주세요.")
+            ctx.command_failed = False
+
         elif isinstance(error, commands.BadArgument):
             await ctx.reply("보낼 사람과 돈을 다시한번 확인해 주세요.")
+            ctx.command_failed = False
+
         else:
             await ctx.reply("오류가 발생했습니다.")
 

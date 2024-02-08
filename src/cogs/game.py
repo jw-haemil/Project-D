@@ -48,12 +48,15 @@ class Game(Cog):
     async def coin_flip_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.reply("동전의 면과 베팅금액을 입력해 주세요.")
+            ctx.command_failed = False
 
         elif isinstance(error, commands.BadLiteralArgument):
             await ctx.reply("**앞** 또는 **뒤** 중에 하나를 입력해 주세요.")
+            ctx.command_failed = False
 
         elif isinstance(error, commands.BadUnionArgument):
             await ctx.reply("베팅금액은 정수 또는 `올인`, `모두`로 입력해 주세요.")
+            ctx.command_failed = False
 
         else:
             await ctx.send(f"오류가 발생했습니다.")
@@ -61,4 +64,3 @@ class Game(Cog):
 
 async def setup(bot: Bot): # setup 함수로 명령어 추가
     await bot.add_cog(Game(bot))
-
