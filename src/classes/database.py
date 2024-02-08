@@ -95,7 +95,7 @@ class DataSQL():
         query = f"SELECT {','.join(columns)} FROM {table}"
         if condition is not None:
             query += f" WHERE {' AND '.join([f'{k}=%s' for k in condition.keys()])}"
-        return await self._query(query, condition.values(), fetch=True)
+        return await self._query(query, tuple(condition.values()), fetch=True)
 
     async def update(self, table: str, data: dict, condition: dict = None) -> None:
         """|coro|
