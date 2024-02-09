@@ -14,7 +14,7 @@ class Game(Cog):
         description="금액을 걸고 동전 던지기 게임을 시작합니다."
     )
     async def coin_flip(self, ctx: commands.Context[Bot], face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
-        user_info = self.bot.database.get_user_info(ctx.author.id)
+        user_info = self.database.get_user_info(ctx.author.id)
 
         if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
@@ -37,7 +37,7 @@ class Game(Cog):
         else:
             random_face = "뒷" if random_face == "뒤" else random_face
             # 확정으로 반 차감, 20% 확률로 모두 잃음
-            if money == 1 or random.random() < 0.2:
+            if money == 1 or random.random() < self.bot_setting.coinflip_total_loss_prob:
                 await user_info.add_money(-money) # 돈 차감
                 await ctx.reply(f"안타깝게도 {random_face}면이 나와 배팅한 돈의 전부({-money:,}원)를 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
             else:

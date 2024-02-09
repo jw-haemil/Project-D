@@ -14,6 +14,7 @@ class Bot(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger("discord.classes.Bot") # 로깅 설정
         self.database = None
+        self.bot_setting = None
 
         intents = discord.Intents.default()
         intents.message_content = True
@@ -37,6 +38,9 @@ class Bot(commands.Bot):
             password=os.environ.get("MYSQL_PASSWORD"),
             database=os.environ.get("MYSQL_DB_NAME"),
         )
+
+        if self.database.pool is not None:
+            self.bot_setting = await self.database.get_bot_setting()
 
         # Cog 관련 코드
         for filename in os.listdir("./src/cogs"):
@@ -81,6 +85,8 @@ class Cog(commands.Cog):
 
     def __init__(self, bot: Bot):
         self.bot = bot
+        self.database = bot.database
+        self.bot_setting = bot.bot_setting
         self.logger = logging.getLogger(f"discord.cog.{self.__class__.__name__}")
 
         self.bot.logger.debug(f"Cog {self.__class__.__name__} loaded")

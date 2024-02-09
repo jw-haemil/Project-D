@@ -48,7 +48,7 @@ bot = Bot()
 # @bot.hybrid_command(
 @bot.command(
     name="리로드",
-    description="Cog를 리로드합니다.",
+    description="Cog및 bot_setting을 리로드합니다.",
 )
 async def reload_cog(ctx: commands.Context[Bot]):
     bot.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
@@ -59,7 +59,10 @@ async def reload_cog(ctx: commands.Context[Bot]):
             await bot.reload_extension(f"src.cogs.{filename[:-3]}")
             bot.logger.info(f"리로드 완료: src.cogs.{filename[:-3]}")
 
-    await ctx.send("Cog를 리로드했습니다.")
+    if bot.bot_setting is not None:
+        await bot.bot_setting.update_setting() # bot_setting 업데이트
+
+    await ctx.send("리로드를 완료했습니다.")
 
 bot.run(
     token=os.environ.get("DISCORD_BOT_TOKEN"),

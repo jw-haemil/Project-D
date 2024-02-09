@@ -16,7 +16,7 @@ class Finance(Cog):
     )
     async def asset_info(self, ctx: commands.Context[Bot], other_user: discord.Member = None):
         user = ctx.author if other_user is None or other_user == ctx.author else other_user
-        user_info = self.bot.database.get_user_info(user.id)
+        user_info = self.database.get_user_info(user.id)
 
         if not await user_info.is_valid_user():
             if user is ctx.author:
@@ -41,7 +41,7 @@ class Finance(Cog):
         info = tuple( # db에서 유저정보 가져오기
             map(
                 lambda x: tuple(map(int, x)),
-                await self.bot.database._query(
+                await self.database._query(
                     f"SELECT id, money FROM user_info WHERE id IN ({','.join(['%s'] * len(ctx.guild.members))});",
                     [member.id for member in ctx.guild.members],
                     fetch=True
@@ -69,24 +69,28 @@ class Finance(Cog):
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context[Bot]):
-        user_info = self.bot.database.get_user_info(ctx.author.id)
+        user_info = self.database.get_user_info(ctx.author.id)
 
+        cooldown = timedelta(hours=self.bot_setting.attendance_cooldown)
         check_time = datetime.utcfromtimestamp(await user_info.get_check_time()) # 출석체크 시간 가져오기
-        if (check_time + timedelta(hours=3)) <= datetime.utcnow(): # 시간 비교
-            if random.random() < 0.001:
-                money = 50000
-                message = f"축하합니다!🎉 0.1% 확률을 뚫고 50,000원을 받았습니다."
+        if (check_time + cooldown) <= datetime.utcnow(): # 시간 비교
+            if random.random() < self.bot_setting.attendance_bonus_money_prob:
+                money = self.bot_setting.attendance_bonus_money
+                message = f"축하합니다!🎉 {self.bot_setting.attendance_bonus_money_prob*100}% 확률을 뚫고 {money:,}원을 받았습니다."
             else:
-                money = random.randint(1, 10) * 1000
+                money = random.randint(
+                    self.bot_setting.attendance_random_money_min,
+                    self.bot_setting.attendance_random_money_max
+                ) * self.bot_setting.attendance_multiple # 돈 추출
                 message = f"{money:,}원을 받았습니다."
-            message += f"\n다음 돈받기 시간은 <t:{int((datetime.now() + timedelta(hours=3)).timestamp())}:T> 입니다."
+            message += f"\n다음 돈받기 시간은 <t:{int((datetime.now() + cooldown).timestamp())}:T> 입니다."
 
             await user_info.add_money(money) # 돈 추가
             await user_info.set_check_time(int(datetime.now().timestamp())) # 출석체크 시간 업데이트
             await ctx.reply(message)
 
         else:
-            await ctx.reply(f"돈받기는 3시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + timedelta(hours=3)).timestamp())}:T> 입니다.")
+            await ctx.reply(f"돈받기는 {self.bot_setting.attendance_cooldown}시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + cooldown).timestamp())}:T> 입니다.")
 
 
     @commands.command(
@@ -96,8 +100,8 @@ class Finance(Cog):
     )
     @Checks.is_registered() # 사용자 등록 여부 확인
     async def send_money(self, ctx: commands.Context[Bot], other_user: discord.Member, money: int):
-        user_info = self.bot.database.get_user_info(ctx.author.id)
-        other_user_info = self.bot.database.get_user_info(other_user.id)
+        user_info = self.database.get_user_info(ctx.author.id)
+        other_user_info = self.database.get_user_info(other_user.id)
 
         if not await other_user_info.is_valid_user(): # 사용자 등록 여부 확인
             await ctx.reply(f"{other_user.display_name}님은 등록되어 있지 않은 유저입니다.")

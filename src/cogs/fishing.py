@@ -40,7 +40,7 @@ class Fishing(Cog):
 
         self.add_fishing_user(ctx.author) # 낚시 시작 처리
         message = await ctx.reply("낚시하는중...")
-        await asyncio.sleep(random.randint(5, 15)) # 낚는 시간
+        await asyncio.sleep(random.randint(self.bot_setting.fishing_random_min, self.bot_setting.fishing_random_max)) # 낚는 시간
 
         await message.edit(content="무언가가 걸린것 같다!")
         await message.add_reaction("🎣")
@@ -51,7 +51,7 @@ class Fishing(Cog):
             return user == ctx.author and str(reaction.emoji) == "🎣"
 
         try:
-            await self.bot.wait_for("reaction_add", timeout=3, check=check)
+            await self.bot.wait_for("reaction_add", timeout=self.bot_setting.fishing_timeout, check=check)
             user_info = ctx.bot.database.get_user_info(ctx.author.id)
             fish_info = ctx.bot.database.get_fish_info()
 
