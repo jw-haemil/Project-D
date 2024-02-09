@@ -5,7 +5,7 @@ import asyncio
 import random
 
 from src.classes.bot import Bot, Cog
-from src.classes.bot_checks import Checks
+from src.classes.command_checks import Checks
 from src.classes.enums import fish_embed_color
 
 
