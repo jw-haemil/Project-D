@@ -429,13 +429,7 @@ class FishInfo():
             FishRating.LEGENDARY: 0.1,
             FishRating.MYTHIC: 0.025,
         }
-        rand_num = random.uniform(0, 100) # 0에서 100까지의 난수 생성
-        cumulative_prob = 0
-
-        for grade, prob in grade_prob.items():
-            cumulative_prob += prob
-            if rand_num <= cumulative_prob:
-                return grade
+        return random.choices(list(grade_prob.keys()), weights=grade_prob.values())[0]
 
 
     async def get_random_fish(self) -> Fish:
