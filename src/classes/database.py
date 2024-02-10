@@ -278,7 +278,7 @@ class UserInfo():
         logger.debug(f"Adding money of user {self._user_id}")
         await self._database._query("UPDATE user_info SET money=money+%s WHERE id=%s", (money, self._user_id))
 
-    async def get_check_time(self) -> int | None:
+    async def get_check_time(self) -> int:
         """|coro|
         유저의 최근 출석체크 시간을 조회합니다.
 
@@ -361,7 +361,7 @@ class Fish():
         return fish_kor_name[self.rating]
 
     @property
-    def length(self) -> int | None:
+    def length(self) -> int:
         """물고기의 길이를 반환합니다.
 
         Returns:
@@ -470,17 +470,18 @@ class BotSetting():
         """|coro|
         봇 설정을 업데이트합니다.
         """
+        get_setting = lambda name: (await self._database.select(table="bot_setting", columns=["value"], condition={"name": name}))[0][0]
         logger.debug("Updating bot setting")
-        self._settings['attendance_cooldown'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_cooldown"}))[0][0])
-        self._settings['attendance_bonus_money'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_bonus_money"}))[0][0])
-        self._settings['attendance_bonus_money_prob'] = float((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_bonus_money_prob"}))[0][0])
-        self._settings['attendance_multiple'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_multiple"}))[0][0])
-        self._settings['attendance_random_money_min'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_random_money_min"}))[0][0])
-        self._settings['attendance_random_money_max'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "attendance_random_money_max"}))[0][0])
-        self._settings['fishing_random_min'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "fishing_random_min"}))[0][0])
-        self._settings['fishing_random_max'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "fishing_random_max"}))[0][0])
-        self._settings['fishing_timeout'] = int((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "fishing_timeout"}))[0][0])
-        self._settings['coinflip_total_loss_prob'] = float((await self._database.select(table="bot_setting", columns=["value"], condition={"name": "coinflip_total_loss_prob"}))[0][0])
+        self._settings['attendance_cooldown'] = int(get_setting("attendance_cooldown"))
+        self._settings['attendance_bonus_money'] = int(get_setting("attendance_bonus_money"))
+        self._settings['attendance_bonus_money_prob'] = float(get_setting("attendance_bonus_money_prob"))
+        self._settings['attendance_multiple'] = int(get_setting("attendance_multiple"))
+        self._settings['attendance_random_money_min'] = int(get_setting("attendance_random_money_min"))
+        self._settings['attendance_random_money_max'] = int(get_setting("attendance_random_money_max"))
+        self._settings['fishing_random_min'] = int(get_setting("fishing_random_min"))
+        self._settings['fishing_random_max'] = int(get_setting("fishing_random_max"))
+        self._settings['fishing_timeout'] = int(get_setting("fishing_timeout"))
+        self._settings['coinflip_total_loss_prob'] = float(get_setting("coinflip_total_loss_prob"))
 
 
     @property
