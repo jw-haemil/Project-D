@@ -9,6 +9,45 @@ from src.classes.command_checks import Checks
 from src.classes.enums import fish_embed_color
 
 
+class FishingButton(discord.ui.View):
+    def __init__(self, context: commands.Context[Bot], fishing_users: set):
+        self.ctx = context
+        self.fishing_users = fishing_users
+        super().__init__()
+
+    @discord.ui.button(label="낚싯대 들기", emoji="🎣", style=discord.ButtonStyle.gray)
+    async def button_callback(self, interaction: discord.Interaction[Bot], button: discord.ui.Button):
+        if self.ctx.author != interaction.user: # 본인이 맞는지 확인
+            return
+
+        self.fishing_users.remove(interaction.user)
+
+        message = None
+        embed = None
+        if button.style == discord.ButtonStyle.gray:
+            message = "낚싯대를 너무 일찍 들어버렸다..."
+
+        elif button.style == discord.ButtonStyle.green:
+            message = "물고기를 잡았다!"
+            user_info = self.ctx.bot.database.get_user_info(self.ctx.author.id)
+            fish_info = self.ctx.bot.database.get_fish_info()
+
+            fish = await fish_info.get_random_fish()
+            await user_info.add_money(fish.price)
+
+            embed = discord.Embed(
+                title=f"{fish.name}",
+                description=f"{fish.description}",
+                colour=fish_embed_color[fish.rating]
+            )
+            embed.add_field(name="길이", value=f"{fish.length_str}")
+            embed.add_field(name="가격", value=f"{fish.price:,}원")
+            embed.add_field(name="등급", value=f"{fish.rating_str}")
+
+        button.disabled = True
+        await interaction.response.edit_message(content=message, embed=embed, view=None if embed else self) # TODO: 멘션이 해제되는 버그가 있음
+
+
 class Fishing(Cog):
     def __init__(self, bot: Bot):
         super().__init__(bot)
@@ -39,41 +78,26 @@ class Fishing(Cog):
             return
 
         self.add_fishing_user(ctx.author) # 낚시 시작 처리
-        message = await ctx.reply("낚시하는중...")
+
+        view = FishingButton(ctx, self.fishing_users) # 버튼 생성
+        button: discord.ui.Button = view.children[0]
+        message = await ctx.reply("낚시하는중...", view=view)
+
         await asyncio.sleep(random.randint(self.bot_setting.fishing_random_min, self.bot_setting.fishing_random_max)) # 낚는 시간
+        if button.disabled == True: # sleep중 버튼을 눌렀을 때
+            return
 
-        await message.edit(content="무언가가 걸린것 같다!")
-        await message.add_reaction("🎣")
+        button.style = discord.ButtonStyle.green # 버튼 색상 변경
+        await message.edit(content="무언가가 걸린것 같다!", view=view)
 
+        await asyncio.sleep(self.bot_setting.fishing_timeout) # 물고기 잡혀있는 시간
+        if button.disabled == True: # sleep중 버튼을 눌렀을 때
+            return
 
-        # 반응을 받아서 물고기를 잡았는지 확인하는 코드
-        def check(reaction: discord.Reaction, user: discord.Member):
-            return user == ctx.author and str(reaction.emoji) == "🎣"
-
-        try:
-            await self.bot.wait_for("reaction_add", timeout=self.bot_setting.fishing_timeout, check=check)
-            user_info = ctx.bot.database.get_user_info(ctx.author.id)
-            fish_info = ctx.bot.database.get_fish_info()
-
-            fish = await fish_info.get_random_fish()
-            await user_info.add_money(fish.price)
-
-            embed = discord.Embed(
-                title=f"{fish.name}",
-                description=f"{fish.description}",
-                colour=fish_embed_color[fish.rating]
-            )
-            embed.add_field(name="길이", value=f"{fish.length_str}")
-            embed.add_field(name="가격", value=f"{fish.price:,}원")
-            embed.add_field(name="등급", value=f"{fish.rating_str}")
-
-            await message.edit(content="물고기를 잡았다!", embed=embed)
-
-        except asyncio.TimeoutError:
-            await message.edit(content="물고기를 놓쳐버렸다...")
-
+        button.disabled = True # 버튼 비활성화
+        button.style = discord.ButtonStyle.red
+        await message.edit(content="물고기를 놓쳐버렸다...", view=view)
         self.remove_fishing_user(ctx.author) # 낚시 종료 처리
-        await message.clear_reactions()
 
     @fishing.error
     async def fishing_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
