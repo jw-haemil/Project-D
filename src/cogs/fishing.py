@@ -45,7 +45,16 @@ class FishingButton(discord.ui.View):
             embed.add_field(name="등급", value=f"{fish.rating_str}")
 
         button.disabled = True
-        await interaction.response.edit_message(content=message, embed=embed, view=None if embed else self) # TODO: 멘션이 해제되는 버그가 있음
+        # interaction.response.edit_message로 수정하면 멘션이 풀리므로 아래와 같이 해결
+        await interaction.message.edit(content=message, embed=embed, view=None if embed else self)
+        await interaction.response.defer()
+        self.stop() # 뷰 무효화
+
+    async def on_error(self, interaction: discord.Interaction[Bot], error: Exception, item: discord.ui.Button) -> None:
+        self.fishing_users.remove(interaction.user)
+        item.disabled = True
+        await interaction.response.edit_message(content="낚시하던중 오류가 발생하였습니다.", view=self)
+        await super().on_error(interaction, error, item)
 
 
 class Fishing(Cog):
@@ -97,6 +106,7 @@ class Fishing(Cog):
         button.disabled = True # 버튼 비활성화
         button.style = discord.ButtonStyle.red
         await message.edit(content="물고기를 놓쳐버렸다...", view=view)
+        view.stop() # 뷰 무효화
         self.remove_fishing_user(ctx.author) # 낚시 종료 처리
 
     @fishing.error
