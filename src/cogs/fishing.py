@@ -20,7 +20,8 @@ class FishingButton(discord.ui.View):
         if self.ctx.author != interaction.user: # 본인이 맞는지 확인
             return
 
-        self.fishing_users.remove(interaction.user)
+        if interaction.user in self.fishing_users:
+            self.fishing_users.remove(interaction.user)
 
         message = None
         embed = None
@@ -106,8 +107,8 @@ class Fishing(Cog):
 
         button.disabled = True # 버튼 비활성화
         button.style = discord.ButtonStyle.red
-        await message.edit(content="물고기를 놓쳐버렸다...", view=view)
         view.stop() # 뷰 무효화
+        await message.edit(content="물고기를 놓쳐버렸다...", view=view)
         if ctx.author in self.fishing_users:
             self.remove_fishing_user(ctx.author) # 낚시 종료 처리
 
