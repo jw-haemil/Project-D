@@ -51,7 +51,8 @@ class FishingButton(discord.ui.View):
         self.stop() # 뷰 무효화
 
     async def on_error(self, interaction: discord.Interaction[Bot], error: Exception, item: discord.ui.Button) -> None:
-        self.fishing_users.remove(interaction.user)
+        if interaction.user in self.fishing_users:
+            self.fishing_users.remove(interaction.user)
         item.disabled = True
         await interaction.response.edit_message(content="낚시하던중 오류가 발생하였습니다.", view=self)
         await super().on_error(interaction, error, item)
@@ -107,7 +108,8 @@ class Fishing(Cog):
         button.style = discord.ButtonStyle.red
         await message.edit(content="물고기를 놓쳐버렸다...", view=view)
         view.stop() # 뷰 무효화
-        self.remove_fishing_user(ctx.author) # 낚시 종료 처리
+        if ctx.author in self.fishing_users:
+            self.remove_fishing_user(ctx.author) # 낚시 종료 처리
 
     @fishing.error
     async def fishing_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
