@@ -436,9 +436,6 @@ class FishInfo():
         """|coro|
         물고기를 랜덤으로 조회합니다.
 
-        Args:
-            grade (FishRating): 물고기 등급
-
         Returns:
             Fish: 물고기
         """
