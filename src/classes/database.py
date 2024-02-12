@@ -322,7 +322,7 @@ class Fish():
         self._description = description
 
         self._length = random.randint(self._min_length, self._max_length)
-        self._price = int((self._default_price * self._length) * self._const_value)
+        self._price = round((self._default_price * self._length) * self._const_value)
 
     @property
     def id(self) -> int:
