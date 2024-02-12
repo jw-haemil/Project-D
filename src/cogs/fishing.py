@@ -49,6 +49,7 @@ class FishingButton(discord.ui.View):
         # interaction.response.edit_message로 수정하면 멘션이 풀리므로 아래와 같이 해결
         await interaction.message.edit(content=message, embed=embed, view=None if embed else self)
         await interaction.response.defer()
+        button.disabled = True
         self.stop() # 뷰 무효화
 
     async def on_error(self, interaction: discord.Interaction[Bot], error: Exception, item: discord.ui.Button) -> None:
