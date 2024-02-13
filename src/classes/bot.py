@@ -68,11 +68,22 @@ class Bot(commands.Bot):
 
         elif isinstance(error, NotRegisteredUser):
             await ctx.reply("사용자 등록을 먼저 해 주세요.")
+            return
 
-        else:
-            if ctx.command_failed:
+        elif isinstance(error, discord.DiscordServerError):
+            await ctx.reply("오류가 발생했습니다.")
+            self.logger.warning(error)
+            return
+
+        elif isinstance(error, commands.CommandInvokeError):
+            if isinstance(error.original, discord.NotFound):
                 await ctx.reply("오류가 발생했습니다.")
-                self.logger.error("Ignoring exception in command %s", ctx.command, exc_info=error)
+                self.logger.warning(error.original.args[0])
+                return
+
+        if ctx.command_failed:
+            await ctx.reply("오류가 발생했습니다.")
+            self.logger.error("Ignoring exception in command %s", ctx.command, exc_info=error)
 
     async def close(self) -> None:
         if self.database is not None:
