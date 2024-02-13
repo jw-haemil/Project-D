@@ -90,7 +90,10 @@ class Finance(Cog):
             await ctx.reply(message)
 
         else:
-            await ctx.reply(f"돈받기는 {self.bot_setting.attendance_cooldown}시간당 한 번만 가능합니다.\n다음 돈받기 시간은 <t:{int((check_time + cooldown).timestamp())}:T> 입니다.")
+            remaining_time = (check_time + cooldown) - datetime.utcnow() # 남은 시간 계산
+            hours, remainder = map(int, divmod(remaining_time.total_seconds(), 3600))
+            minutes, seconds = map(int, divmod(remainder, 60))
+            await ctx.reply(f"돈받기를 하려면 {hours}시간 {minutes}분 {seconds}초를 더 기다려야 합니다.\n다음 돈받기 시간은 <t:{int((check_time + cooldown).timestamp())}:T> 입니다.")
 
 
     @commands.command(
