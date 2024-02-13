@@ -4,6 +4,7 @@ from discord.utils import stream_supports_colour, _ColourFormatter
 import os
 import dotenv
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
 
 from src.classes.bot import Bot
@@ -27,10 +28,31 @@ stream_handler.setLevel(logging.INFO)
 
 
 # 파일 로그 설정
-file_handler = logging.FileHandler(
+file_handler = TimedRotatingFileHandler(
     filename=f"./logs/{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.log",
-    encoding="utf-8",
-    mode="w"
+    when="midnight",
+    interval=1,
+    backupCount=30,
+    encoding="utf-8"
+)
+file_handler.setFormatter(
+    logging.Formatter(
+        fmt="[{asctime}] {levelname:<8} <{name}> [{funcName} | {lineno}] >> {message}",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        style="{"
+    )
+)
+file_handler.setLevel(logging.INFO)
+logging.getLogger().addHandler(file_handler)
+
+
+# 디버그 파일 로그 설정
+file_handler = TimedRotatingFileHandler(
+    filename=f"./logs/debug/{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.log",
+    when="midnight",
+    interval=1,
+    backupCount=30,
+    encoding="utf-8"
 )
 file_handler.setFormatter(
     logging.Formatter(
