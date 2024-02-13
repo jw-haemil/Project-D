@@ -72,6 +72,7 @@ bot = Bot()
     name="리로드",
     description="Cog및 bot_setting을 리로드합니다.",
 )
+@commands.is_owner()
 async def reload_cog(ctx: commands.Context[Bot]):
     bot.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command}: {ctx.message.content}")
     await ctx.defer()
@@ -85,6 +86,12 @@ async def reload_cog(ctx: commands.Context[Bot]):
         await bot.bot_setting.update_setting() # bot_setting 업데이트
 
     await ctx.send("리로드를 완료했습니다.")
+
+@reload_cog.error
+async def reload_cog_error(ctx: commands.Context[Bot], error: commands.CommandError):
+    if isinstance(error, commands.NotOwner):
+        await ctx.reply("이 명령어는 관리자만 사용할 수 있습니다.")
+        ctx.command_failed = False
 
 bot.run(
     token=os.environ.get("DISCORD_BOT_TOKEN"),
