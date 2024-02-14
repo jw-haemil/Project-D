@@ -29,14 +29,14 @@ class Bot(commands.Bot):
     async def setup_hook(self):
         # 데이터베이스 관련 코드
         self.database = DataSQL(
-            host=os.environ.get("MYSQL_HOST"),
-            port=os.environ.get("MYSQL_PORT"),
+            host=os.getenv("MYSQL_HOST"),
+            port=os.getenv("MYSQL_PORT"),
             loop=self.loop
         )
         await self.database.auth(
-            user=os.environ.get("MYSQL_USER"),
-            password=os.environ.get("MYSQL_PASSWORD"),
-            database=os.environ.get("MYSQL_DB_NAME"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DB_NAME"),
         )
 
         if self.database.pool is not None:
@@ -47,13 +47,15 @@ class Bot(commands.Bot):
             if filename.endswith(".py"):
                 await self.load_extension(f"src.cogs.{filename[:-3]}")
 
-        # await self.tree.sync()
+        GUILD_ID = discord.Object(id=os.getenv("DISCORD_GUILD_ID"))
+        self.tree.copy_global_to(guild=GUILD_ID)
+        await self.tree.sync(guild=GUILD_ID)
 
     async def on_ready(self):
         self.logger.info(f"{self.user} 봇 준비 완료")
         await self.change_presence(
             status=discord.Status.online,
-            activity=discord.Game(os.environ.get("BOT_ACTIVITY")), # 봇 상태 메시지 설정
+            activity=discord.Game(os.getenv("BOT_ACTIVITY")), # 봇 상태 메시지 설정
         )
 
     async def on_message(self, message: discord.Message):

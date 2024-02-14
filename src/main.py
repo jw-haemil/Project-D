@@ -94,7 +94,7 @@ async def reload_cog_error(ctx: commands.Context[Bot], error: commands.CommandEr
         ctx.command_failed = False
 
 bot.run(
-    token=os.environ.get("DISCORD_BOT_TOKEN"),
+    token=os.getenv("DISCORD_BOT_TOKEN"),
     log_handler=stream_handler,
     log_level=logging.DEBUG,
 )
