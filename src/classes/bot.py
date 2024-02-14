@@ -21,7 +21,7 @@ class Bot(commands.Bot):
         intents.members = True
 
         super().__init__(
-            command_prefix=";", # 봇 접두사
+            command_prefix=commands.when_mentioned_or(";"), # 봇 접두사
             intents=intents, # 봇 기능 설정
             help_command=HelpCommand()
         )
