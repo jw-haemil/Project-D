@@ -48,6 +48,8 @@ class FishingButton(discord.ui.Button["FishingView"]):
                 embed.add_field(name="길이", value=f"{fish.length_str}")
                 embed.add_field(name="가격", value=f"{fish.price:,}원")
                 embed.add_field(name="등급", value=f"{fish.rating_str}")
+            case _:
+                return
 
         self.disabled = True
         assert self.disabled
