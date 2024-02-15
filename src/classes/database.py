@@ -156,16 +156,16 @@ class DataSQL():
         args = tuple(condition.values()) if condition is not None else None
         return (await self._query(query, args, fetch=True))[0][0]
 
-    def get_user_info(self, user_id: int) -> "UserInfo":
+    def get_user_info(self, user: int | discord.User | discord.Member) -> "UserInfo":
         """유저 정보를 생성합니다.
 
         Args:
-            user_id (int): 유저 아이디
+            user (int | discord.User | discord.Member): 유저 아이디
 
         Returns:
             UserInfo: 유저 정보
         """
-        return UserInfo(self, user_id)
+        return UserInfo(self, user)
 
     def get_fish_info(self) -> "FishInfo":
         """물고기 정보를 생성합니다.
