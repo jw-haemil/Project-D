@@ -4,6 +4,7 @@ from discord.ext import commands
 import random
 from typing import Literal
 
+from src.classes import command_checks
 from src.classes.bot import Bot, Cog
 
 
@@ -13,12 +14,9 @@ class Game(Cog):
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
         description="금액을 걸고 동전 던지기 게임을 시작합니다."
     )
+    @command_checks.is_registered()
     async def coin_flip(self, ctx: commands.Context[Bot], face: Literal["앞", "뒤"], money: int | Literal["올인", "모두"]):
         user_info = self.database.get_user_info(ctx.author.id)
-
-        if not await user_info.is_valid_user(): # 사용자 등록 여부 확인
-            await ctx.reply("사용자 등록을 먼저 해 주세요.")
-            return
 
         money = await user_info.get_money() if money in ("올인", "모두") else money
         if money > (user_money := await user_info.get_money()): # 돈이 부족하면
