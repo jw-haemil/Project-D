@@ -22,6 +22,8 @@ class FishingButton(discord.ui.View):
 
         if interaction.user in self.fishing_users:
             self.fishing_users.remove(interaction.user)
+        else: # 다른 플랫폼에서 동시에 누르는걸 방지
+            return
 
         message = None
         embed = None
