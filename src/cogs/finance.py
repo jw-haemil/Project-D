@@ -4,8 +4,8 @@ from discord.ext import commands
 import random
 from datetime import datetime, timedelta
 
+from src.classes import command_checks
 from src.classes.bot import Bot, Cog
-from src.classes.command_checks import Checks
 
 
 class Finance(Cog):
@@ -67,7 +67,7 @@ class Finance(Cog):
         aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
         description="돈을 받습니다."
     )
-    @Checks.is_registered() # 사용자 등록 여부 확인
+    @command_checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context[Bot]):
         user_info = self.database.get_user_info(ctx.author.id)
 
@@ -101,7 +101,7 @@ class Finance(Cog):
         aliases=["ㅅㄱ"],
         description="다른 사람에게 돈을 보냅니다."
     )
-    @Checks.is_registered() # 사용자 등록 여부 확인
+    @command_checks.is_registered() # 사용자 등록 여부 확인
     async def send_money(self, ctx: commands.Context[Bot], other_user: discord.Member, money: int):
         user_info = self.database.get_user_info(ctx.author.id)
         other_user_info = self.database.get_user_info(other_user.id)

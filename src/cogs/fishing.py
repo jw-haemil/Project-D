@@ -4,8 +4,8 @@ from discord.ext import commands
 import asyncio
 import random
 
+from src.classes import command_checks
 from src.classes.bot import Bot, Cog
-from src.classes.command_checks import Checks
 from src.classes.enums import fish_embed_color
 
 
@@ -85,7 +85,7 @@ class Fishing(Cog):
         aliases=["ㄴㅅ"],
         description="낚시를 합니다. 낚시도중 메시지가 바뀌었을 때, 반응을 누르면 물고기가 잡힙니다."
     )
-    @Checks.is_registered()
+    @command_checks.is_registered()
     async def fishing(self, ctx: commands.Context[Bot]):
         if self.is_fishing_user(ctx.author):
             await ctx.reply("이미 낚시중입니다.", delete_after=3)
