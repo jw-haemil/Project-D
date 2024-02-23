@@ -38,7 +38,14 @@ class TicTacToeButton(discord.ui.Button["TicTacToeView"]):
         if winner is None:
             content = f"{view.users[view.current_player].mention}님의 차례 입니다."
         else:
-            content = "비겼습니다." if winner == view.Tie else f"{view.users[winner].mention}님이 승리하셨습니다."
+            for user in view.users.values():
+                if user in view.cog.tic_tac_toe_users:
+                    view.cog.tic_tac_toe_users.remove(user) # 게임에 참가중인 유저 목록에서 제거
+
+            if winner == view.Tie:
+                content = "비겼습니다."
+            else:
+                content = f"{view.users[winner].mention}님이 승리하셨습니다."
 
             for child in view.children:
                 child.disabled = True
@@ -56,8 +63,9 @@ class TicTacToeView(discord.ui.View):
     O = 1
     Tie = 2
 
-    def __init__(self, message: discord.Message, users: dict[int, discord.Member], bet: int):
-        super().__init__() # const
+    def __init__(self, cog: Cog, message: discord.Message, users: dict[int, discord.Member], bet: int):
+        super().__init__(timeout=30) # timeout 시간 db로 설정
+        self.cog = cog
         self.message = message
         self.users = users
         self.bet = bet
@@ -74,10 +82,22 @@ class TicTacToeView(discord.ui.View):
                 self.add_item(TicTacToeButton(x, y))
 
     async def on_timeout(self):
+        for user in self.users.values():
+            if user in self.cog.tic_tac_toe_users:
+                self.cog.tic_tac_toe_users.remove(user) # 게임에 참가중인 유저 목록에서 제거
+
         message = await self.message.fetch()
         content = message.content.split("\n")
         winner = self.users[self.X] if self.current_player == self.O else self.users[self.O]
-        content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다."
+        loser = self.users[self.X] if self.current_player != self.O else self.users[self.O]
+
+        if self.bet > 0:
+            await self.cog.database.add_money(-self.bet, loser)
+            await self.cog.database.add_money(self.bet, winner)
+            content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다.\n{winner.mention}님에게 {self.bet*2:,}원이 지급되었습니다."
+        else:
+            content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다."
+
         for child in self.children:
             child.disabled = True
         await self.message.edit(content="\n".join(content), view=self)
@@ -120,7 +140,7 @@ class TicTacToeView(discord.ui.View):
 
 class TicTacToeAcceptView(discord.ui.View):
     def __init__(self, cog: Cog, admin: discord.Member, another: discord.Member, bet: int):
-        super().__init__()
+        super().__init__(timeout=180)
         self._cog = cog
         self._admin = admin
         self._another = another
@@ -138,6 +158,16 @@ class TicTacToeAcceptView(discord.ui.View):
         if interaction.user != self._another: # 초대를 받은 사람이 맞는지 확인
             return
 
+        if self._another in self._cog.tic_tac_toe_users:
+            await interaction.response.send_message("이미 참가중인 게임이 있습니다.", ephemeral=True)
+            return
+        elif self._admin in self._cog.tic_tac_toe_users:
+            await interaction.response.send_message("이미 참가중인 게임이 있는 유저입니다.", ephemeral=True)
+            return
+
+        self._cog.tic_tac_toe_users.add(self._admin)
+        self._cog.tic_tac_toe_users.add(self._another)
+
         game_order = dict(zip([TicTacToeView.X, TicTacToeView.O], random.sample([self._admin, self._another], 2))) # 게임 순서
         content = (
             f"O: {game_order[TicTacToeView.O].mention}",
@@ -145,4 +175,4 @@ class TicTacToeAcceptView(discord.ui.View):
             f"우승 금액: {self._bet*2:,}원" if self._bet > 0 else None,
             f"\n{game_order[TicTacToeView.X].mention}님이 선공입니다."
         )
-        await interaction.response.edit_message(content="\n".join(c for c in content if c is not None), view=TicTacToeView(interaction.message, game_order, self._bet))
+        await interaction.response.edit_message(content="\n".join(c for c in content if c is not None), view=TicTacToeView(self._cog, interaction.message, game_order, self._bet))

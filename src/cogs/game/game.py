@@ -69,12 +69,12 @@ class Game(Cog):
     )
     @command_checks.is_registered()
     async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None, bet: int = 0):
-        # if ctx.author in self.tic_tac_toe_users:
-        #     await ctx.reply("이미 참가중인 게임이 있습니다.")
-        #     return
-        # elif another in self.tic_tac_toe_users:
-        #     await ctx.reply("이미 참가중인 게임이 있습니다.")
-        #     return
+        if ctx.author in self.tic_tac_toe_users:
+            await ctx.reply("이미 참가중인 게임이 있습니다.")
+            return
+        elif another in self.tic_tac_toe_users:
+            await ctx.reply("이미 참가중인 게임이 있는 유저입니다.")
+            return
 
         if another is None or another == ctx.author:
             await ctx.reply("아직 완성되지 않은 기능 입니다.")
@@ -112,4 +112,8 @@ class Game(Cog):
 
     @tic_tac_toe.error
     async def tic_tac_toe_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
-        ...
+        
+
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("상대방과 베팅금액을 다시한번 확인해 주세요.")
+            ctx.command_failed = False
