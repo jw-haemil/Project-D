@@ -6,10 +6,14 @@ from typing import Literal, Optional
 
 from src.classes import command_checks
 from src.classes.bot import Bot, Cog
-from .view import TicTacToeView
+from .view import TicTacToeAcceptView
 
 
 class Game(Cog):
+    def __init__(self, bot: Bot):
+        super().__init__(bot)
+        self.tic_tac_toe_users: set[discord.Member] = set() # 틱택토 유저 정보 저장
+
     @commands.command(
         name="동전던지기",
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
@@ -65,8 +69,12 @@ class Game(Cog):
     )
     @command_checks.is_registered()
     async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None, bet: int = 0):
-        # TODO: 중복참가 불가능하게 하기
-        # TODO: 참가 수락 버튼 만들기
+        # if ctx.author in self.tic_tac_toe_users:
+        #     await ctx.reply("이미 참가중인 게임이 있습니다.")
+        #     return
+        # elif another in self.tic_tac_toe_users:
+        #     await ctx.reply("이미 참가중인 게임이 있습니다.")
+        #     return
 
         if another is None or another == ctx.author:
             await ctx.reply("아직 완성되지 않은 기능 입니다.")
@@ -79,6 +87,10 @@ class Game(Cog):
             await ctx.reply(f"{another.display_name}님은 등록되어 있지 않은 유저입니다.")
             return
 
+        elif bet < 0:
+            await ctx.reply("베팅금액을 다시 입력 해 주세요.")
+            return
+
         elif (user_money := await user_info.get_money()) < bet:
             await ctx.reply(f"돈이 부족합니다. (현재 자산: {user_money:,}원)")
             return
@@ -87,14 +99,16 @@ class Game(Cog):
             await ctx.reply(f"{another.display_name}님의 돈이 부족합니다.")
             return
 
-        game_order = dict(zip([TicTacToeView.X, TicTacToeView.O], random.sample([ctx.author, another], 2)))
-        content = (
-            f"O: {game_order[TicTacToeView.O].mention}",
-            f"X: {game_order[TicTacToeView.X].mention}",
-            f"우승 금액: {bet*2:,}원" if bet > 0 else None,
-            f"\n{game_order[TicTacToeView.X].mention}님이 선공입니다."
+
+        async def view_on_timeout(message: discord.Message):
+            await message.edit(content="초대시간이 초과되었습니다.", view=None)
+
+        view = TicTacToeAcceptView(self, ctx.author, another, bet)
+        message = await ctx.send(
+            f"{another.mention}\n{ctx.author.display_name}님이 틱택토 1대1 매치에 초대하였습니다.\n배팅금액: {bet:,}원",
+            view=view
         )
-        await ctx.send("\n".join([c for c in content if c is not None]), view=TicTacToeView(game_order, bet))
+        view.on_timeout = lambda: view_on_timeout(message)
 
     @tic_tac_toe.error
     async def tic_tac_toe_error(self, ctx: commands.Context[Bot], error: commands.CommandError):

@@ -1,5 +1,9 @@
 import discord
 
+import random
+
+from src.classes.bot import Cog
+
 
 class TicTacToeButton(discord.ui.Button["TicTacToeView"]):
     def __init__(self, x: int, y: int):
@@ -52,8 +56,9 @@ class TicTacToeView(discord.ui.View):
     O = 1
     Tie = 2
 
-    def __init__(self, users: dict[int, discord.Member], bet: int):
-        super().__init__()
+    def __init__(self, message: discord.Message, users: dict[int, discord.Member], bet: int):
+        super().__init__() # const
+        self.message = message
         self.users = users
         self.bet = bet
 
@@ -67,6 +72,15 @@ class TicTacToeView(discord.ui.View):
         for x in range(3):
             for y in range(3):
                 self.add_item(TicTacToeButton(x, y))
+
+    async def on_timeout(self):
+        message = await self.message.fetch()
+        content = message.content.split("\n")
+        winner = self.users[self.X] if self.current_player == self.O else self.users[self.O]
+        content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다."
+        for child in self.children:
+            child.disabled = True
+        await self.message.edit(content="\n".join(content), view=self)
 
     def check_board_winner(self):
         for across in self.board:
@@ -102,3 +116,33 @@ class TicTacToeView(discord.ui.View):
             return self.Tie
 
         return None
+
+
+class TicTacToeAcceptView(discord.ui.View):
+    def __init__(self, cog: Cog, admin: discord.Member, another: discord.Member, bet: int):
+        super().__init__()
+        self._cog = cog
+        self._admin = admin
+        self._another = another
+        self._bet = bet
+
+    @discord.ui.button(label="거절", style=discord.ButtonStyle.red)
+    async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self._another: # 초대를 받은 사람이 맞는지 확인
+            return
+
+        await interaction.response.edit_message(content="초대가 거절되었습니다.", view=None)
+
+    @discord.ui.button(label="수락", style=discord.ButtonStyle.green)
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user != self._another: # 초대를 받은 사람이 맞는지 확인
+            return
+
+        game_order = dict(zip([TicTacToeView.X, TicTacToeView.O], random.sample([self._admin, self._another], 2))) # 게임 순서
+        content = (
+            f"O: {game_order[TicTacToeView.O].mention}",
+            f"X: {game_order[TicTacToeView.X].mention}",
+            f"우승 금액: {self._bet*2:,}원" if self._bet > 0 else None,
+            f"\n{game_order[TicTacToeView.X].mention}님이 선공입니다."
+        )
+        await interaction.response.edit_message(content="\n".join(c for c in content if c is not None), view=TicTacToeView(interaction.message, game_order, self._bet))
