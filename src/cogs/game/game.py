@@ -68,7 +68,7 @@ class Game(Cog):
         description="틱택토 게임을 합니다.",
     )
     @command_checks.is_registered()
-    async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None, bet: int = 0):
+    async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None):
         if ctx.author in self.tic_tac_toe_users:
             await ctx.reply("이미 참가중인 게임이 있습니다.")
             return
@@ -80,40 +80,24 @@ class Game(Cog):
             await ctx.reply("아직 완성되지 않은 기능 입니다.")
             return
 
-        user_info = self.database.get_user_info(ctx.author.id)
         another_info = self.database.get_user_info(another.id)
-
         if not await another_info.is_valid_user():
             await ctx.reply(f"{another.display_name}님은 등록되어 있지 않은 유저입니다.")
-            return
-
-        elif bet < 0:
-            await ctx.reply("베팅금액을 다시 입력 해 주세요.")
-            return
-
-        elif (user_money := await user_info.get_money()) < bet:
-            await ctx.reply(f"돈이 부족합니다. (현재 자산: {user_money:,}원)")
-            return
-
-        elif await another_info.get_money() < bet:
-            await ctx.reply(f"{another.display_name}님의 돈이 부족합니다.")
             return
 
 
         async def view_on_timeout(message: discord.Message):
             await message.edit(content="초대시간이 초과되었습니다.", view=None)
 
-        view = TicTacToeAcceptView(self, ctx.author, another, bet)
+        view = TicTacToeAcceptView(self, ctx.author, another)
         message = await ctx.send(
-            f"{another.mention}\n{ctx.author.display_name}님이 틱택토 1대1 매치에 초대하였습니다.\n배팅금액: {bet:,}원",
+            f"{another.mention}\n{ctx.author.display_name}님이 틱택토 1대1 매치에 초대하였습니다.",
             view=view
         )
         view.on_timeout = lambda: view_on_timeout(message)
 
     @tic_tac_toe.error
     async def tic_tac_toe_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
-        
-
         if isinstance(error, commands.BadArgument):
-            await ctx.reply("상대방과 베팅금액을 다시한번 확인해 주세요.")
+            await ctx.reply("올바른 상대를 입력해 주세요.")
             ctx.command_failed = False

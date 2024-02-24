@@ -1,9 +1,10 @@
 import discord
 
 import random
+from typing import TYPE_CHECKING
 
-from src.classes.bot import Cog
-
+if TYPE_CHECKING:
+    from .game import Game
 
 class TicTacToeButton(discord.ui.Button["TicTacToeView"]):
     def __init__(self, x: int, y: int):
@@ -63,12 +64,11 @@ class TicTacToeView(discord.ui.View):
     O = 1
     Tie = 2
 
-    def __init__(self, cog: Cog, message: discord.Message, users: dict[int, discord.Member], bet: int):
-        super().__init__(timeout=30) # timeout 시간 db로 설정
+    def __init__(self, cog: "Game", message: discord.Message, users: dict[int, discord.Member]):
+        super().__init__(timeout=5) # timeout 시간 db로 설정
         self.cog = cog
         self.message = message
         self.users = users
-        self.bet = bet
 
         self.current_player = self.X
         self.board = [
@@ -89,14 +89,8 @@ class TicTacToeView(discord.ui.View):
         message = await self.message.fetch()
         content = message.content.split("\n")
         winner = self.users[self.X] if self.current_player == self.O else self.users[self.O]
-        loser = self.users[self.X] if self.current_player != self.O else self.users[self.O]
 
-        if self.bet > 0:
-            await self.cog.database.add_money(-self.bet, loser)
-            await self.cog.database.add_money(self.bet, winner)
-            content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다.\n{winner.mention}님에게 {self.bet*2:,}원이 지급되었습니다."
-        else:
-            content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다."
+        content[-1] = f"시간이 초과되어 {winner.mention}님이 우승하였습니다."
 
         for child in self.children:
             child.disabled = True
@@ -139,12 +133,11 @@ class TicTacToeView(discord.ui.View):
 
 
 class TicTacToeAcceptView(discord.ui.View):
-    def __init__(self, cog: Cog, admin: discord.Member, another: discord.Member, bet: int):
+    def __init__(self, cog: "Game", admin: discord.Member, another: discord.Member):
         super().__init__(timeout=180)
         self._cog = cog
         self._admin = admin
         self._another = another
-        self._bet = bet
 
     @discord.ui.button(label="거절", style=discord.ButtonStyle.red)
     async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -172,7 +165,9 @@ class TicTacToeAcceptView(discord.ui.View):
         content = (
             f"O: {game_order[TicTacToeView.O].mention}",
             f"X: {game_order[TicTacToeView.X].mention}",
-            f"우승 금액: {self._bet*2:,}원" if self._bet > 0 else None,
-            f"\n{game_order[TicTacToeView.X].mention}님이 선공입니다."
+            f"\n{game_order[TicTacToeView.X].display_name}님이 선공입니다."
         )
-        await interaction.response.edit_message(content="\n".join(c for c in content if c is not None), view=TicTacToeView(self._cog, interaction.message, game_order, self._bet))
+        await interaction.response.edit_message(
+            content="\n".join(content),
+            view=TicTacToeView(self._cog, interaction.message, game_order)
+        )
