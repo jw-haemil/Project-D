@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from src.classes import command_checks
 from src.classes.bot import Bot, Cog
-from .view import TicTacToeAcceptView
+from .view import TicTacToeInviteView
 
 
 class Game(Cog):
@@ -89,7 +89,7 @@ class Game(Cog):
         async def view_on_timeout(message: discord.Message):
             await message.edit(content="초대시간이 초과되었습니다.", view=None)
 
-        view = TicTacToeAcceptView(self, ctx.author, another)
+        view = TicTacToeInviteView(self, ctx.author, another)
         message = await ctx.send(
             f"{another.mention}\n{ctx.author.display_name}님이 틱택토 1대1 매치에 초대하였습니다.",
             view=view

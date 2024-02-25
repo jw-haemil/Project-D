@@ -65,7 +65,7 @@ class TicTacToeView(discord.ui.View):
     Tie = 2
 
     def __init__(self, cog: "Game", message: discord.Message, users: dict[int, discord.Member]):
-        super().__init__(timeout=5) # timeout 시간 db로 설정
+        super().__init__(timeout=cog.bot_setting.ticitactoe_game_timeout)
         self.cog = cog
         self.message = message
         self.users = users
@@ -132,9 +132,9 @@ class TicTacToeView(discord.ui.View):
         return None
 
 
-class TicTacToeAcceptView(discord.ui.View):
+class TicTacToeInviteView(discord.ui.View):
     def __init__(self, cog: "Game", admin: discord.Member, another: discord.Member):
-        super().__init__(timeout=180)
+        super().__init__(timeout=cog.bot_setting.tictactoe_invite_timeout)
         self._cog = cog
         self._admin = admin
         self._another = another
