@@ -77,7 +77,13 @@ async def reload_cog(ctx: commands.Context[Bot]):
     await ctx.defer()
 
     for filename in os.listdir("./src/cogs"):
-        if filename.endswith(".py") and not filename.startswith("_"):
+        if filename.startswith("_"):
+            continue
+
+        if os.path.isdir(f"./src/cogs/{filename}") and "__init__.py" in os.listdir(f"./src/cogs/{filename}"):
+            await bot.reload_extension(f"src.cogs.{filename}")
+            bot.logger.info(f"리로드 완료: src.cogs.{filename}")
+        elif filename.endswith(".py"):
             await bot.reload_extension(f"src.cogs.{filename[:-3]}")
             bot.logger.info(f"리로드 완료: src.cogs.{filename[:-3]}")
 

@@ -2,13 +2,18 @@ import discord
 from discord.ext import commands
 
 import random
-from typing import Literal
+from typing import Literal, Optional
 
 from src.classes import command_checks
 from src.classes.bot import Bot, Cog
+from .view import TicTacToeInviteView
 
 
 class Game(Cog):
+    def __init__(self, bot: Bot):
+        super().__init__(bot)
+        self.tic_tac_toe_users: set[discord.Member] = set() # 틱택토 유저 정보 저장
+
     @commands.command(
         name="동전던지기",
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
@@ -57,5 +62,42 @@ class Game(Cog):
             ctx.command_failed = False
 
 
-async def setup(bot: Bot): # setup 함수로 명령어 추가
-    await bot.add_cog(Game(bot))
+    @commands.command(
+        name="틱택토",
+        aliases=["ㅌㅌㅌ", "ttt"],
+        description="틱택토 게임을 합니다.",
+    )
+    @command_checks.is_registered()
+    async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None):
+        if ctx.author in self.tic_tac_toe_users:
+            await ctx.reply("이미 참가중인 게임이 있습니다.")
+            return
+        elif another in self.tic_tac_toe_users:
+            await ctx.reply("이미 참가중인 게임이 있는 유저입니다.")
+            return
+
+        if another is None or another == ctx.author:
+            await ctx.reply("아직 완성되지 않은 기능 입니다.")
+            return
+
+        another_info = self.database.get_user_info(another.id)
+        if not await another_info.is_valid_user():
+            await ctx.reply(f"{another.display_name}님은 등록되어 있지 않은 유저입니다.")
+            return
+
+
+        async def view_on_timeout(message: discord.Message):
+            await message.edit(content="초대시간이 초과되었습니다.", view=None)
+
+        view = TicTacToeInviteView(self, ctx.author, another)
+        message = await ctx.send(
+            f"{another.mention}\n{ctx.author.display_name}님이 틱택토 1대1 매치에 초대하였습니다.",
+            view=view
+        )
+        view.on_timeout = lambda: view_on_timeout(message)
+
+    @tic_tac_toe.error
+    async def tic_tac_toe_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("올바른 상대를 입력해 주세요.")
+            ctx.command_failed = False

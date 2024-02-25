@@ -456,6 +456,8 @@ class BotSettingColumns(TypedDict):
     fishing_random_max: int # 낚시에서 물고기가 걸리는 최대시간 (초)
     fishing_timeout: int # 낚시에서 물고기를 잡는 시간 (초)
     coinflip_total_loss_prob: float # 동전던지기 실패시, 가지고 있는 돈을 모두 잃을 확률 (%)
+    ticitactoe_game_timeout: int # 틱택토 게임중 일정시간동안 응답이 없을 경우, 게임을 중지할 시간 (초)
+    tictactoe_invite_timeout: int # 틱택토 초대시 일정시간동안 응답이 없을 경우, 초대를 만료할 시간 (초)
 
 
 class BotSetting():
@@ -470,17 +472,9 @@ class BotSetting():
         async def get_setting(name: str): 
             return (await self._database.select(table="bot_setting", columns=["value"], condition={"name": name}))[0][0]
         logger.debug("Updating bot setting")
-        self._settings['attendance_cooldown'] = int(await get_setting("attendance_cooldown"))
-        self._settings['attendance_bonus_money'] = int(await get_setting("attendance_bonus_money"))
-        self._settings['attendance_bonus_money_prob'] = float(await get_setting("attendance_bonus_money_prob"))
-        self._settings['attendance_multiple'] = int(await get_setting("attendance_multiple"))
-        self._settings['attendance_random_money_min'] = int(await get_setting("attendance_random_money_min"))
-        self._settings['attendance_random_money_max'] = int(await get_setting("attendance_random_money_max"))
-        self._settings['fishing_random_min'] = int(await get_setting("fishing_random_min"))
-        self._settings['fishing_random_max'] = int(await get_setting("fishing_random_max"))
-        self._settings['fishing_timeout'] = int(await get_setting("fishing_timeout"))
-        self._settings['coinflip_total_loss_prob'] = float(await get_setting("coinflip_total_loss_prob"))
 
+        for _name, _type in BotSettingColumns.__annotations__.items():
+            self._settings[_name] = _type(await get_setting(_name))
 
     @property
     def attendance_cooldown(self) -> int:
@@ -579,3 +573,25 @@ class BotSetting():
             float: 동전던지기 실패시, 가지고 있는 돈을 모두 잃을 확률
         """
         return self._settings['coinflip_total_loss_prob'] / 100 # 확률 단위를 % 로 변환합니다.
+
+    @property
+    def ticitactoe_game_timeout(self) -> int | None:
+        """틱택토 게임중 일정시간동안 응답이 없을 경우, 게임을 중지할 시간을 반환합니다.
+        단위: 초
+
+        Returns:
+            int: 틱택토 게임중 일정시간동안 응답이 없을 경우, 게임을 중지할 시간
+        """
+        value = self._settings['ticitactoe_game_timeout']
+        return None if value == -1 else value
+
+    @property
+    def tictactoe_invite_timeout(self) -> int | None:
+        """틱택토 초대시 일정시간동안 응답이 없을 경우, 초대를 만료할 시간을 반환합니다.
+        단위: 초
+
+        Returns:
+            int: 틱택토 초대시 일정시간동안 응답이 없을 경우, 초대를 만료할 시간
+        """
+        value = self._settings['tictactoe_invite_timeout']
+        return None if value == -1 else value
