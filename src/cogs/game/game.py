@@ -4,9 +4,9 @@ from discord.ext import commands
 import random
 from typing import Optional
 
-from src.utils.math_utils import lerp
 from src.classes import command_checks
 from src.classes.bot import Bot, Cog
+from src.utils.math_utils import lerp
 from .view import TicTacToeInviteView
 from .converter import CoinFaceConverter, CoinBetConverter
 
@@ -41,7 +41,11 @@ class Game(Cog):
             await ctx.reply(f"축하합니다! {face_str}면이 나와 {money:,}원을 받았습니다. (현재 자산: {await user_info.get_money():,}원)")
         else:
             face_str = "앞" if random_face else "뒷"
-            loss_value = random.randint(1, round(lerp(2, 5, money / await user_info.get_money())))
+            loss_value = random.randint(1, round(lerp(
+                self.bot_setting.coinflip_loss_min,
+                self.bot_setting.coinflip_loss_max,
+                money / await user_info.get_money()
+            )))
             if loss_value == 1:
                 await user_info.add_money(-money) # 돈 차감
                 await ctx.reply(f"안타깝게도 {face_str}면이 나와 배팅한 돈의 전부({-money:,}원)를 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")

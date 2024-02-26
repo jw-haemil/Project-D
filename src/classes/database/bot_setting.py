@@ -17,7 +17,8 @@ class BotSettingColumns(TypedDict):
     fishing_random_min: int # 낚시에서 물고기가 걸리는 최소시간 (초)
     fishing_random_max: int # 낚시에서 물고기가 걸리는 최대시간 (초)
     fishing_timeout: int # 낚시에서 물고기를 잡는 시간 (초)
-    coinflip_total_loss_prob: float # 동전던지기 실패시, 가지고 있는 돈을 모두 잃을 확률 (%)
+    coinflip_loss_min: int # 동전던지기 실패시, 베팅금액을 잃는 비율의 최소값
+    coinflip_loss_max: int # 동전던지기 실패시, 베팅금액을 잃는 비율의 최대값
     ticitactoe_game_timeout: int # 틱택토 게임중 일정시간동안 응답이 없을 경우, 게임을 중지할 시간 (초)
     tictactoe_invite_timeout: int # 틱택토 초대시 일정시간동안 응답이 없을 경우, 초대를 만료할 시간 (초)
 
@@ -126,15 +127,22 @@ class BotSetting():
         return self._settings['fishing_timeout']
 
     @property
-    def coinflip_total_loss_prob(self) -> float:
-        """동전던지기 실패시, 가지고 있는 돈을 모두 잃을 확률을 반환합니다.
-
-        확률은 0 ~ 1 사이의 값
+    def coinflip_loss_min(self) -> int:
+        """동전던지기 실패시, 베팅금액을 잃는 비율의 최소값을 반환합니다.
 
         Returns:
-            float: 동전던지기 실패시, 가지고 있는 돈을 모두 잃을 확률
+            int: 동전던지기 실패시, 베팅금액을 잃는 비율의 최소값
         """
-        return self._settings['coinflip_total_loss_prob'] / 100 # 확률 단위를 % 로 변환합니다.
+        return self._settings['coinflip_loss_min']
+
+    @property
+    def coinflip_loss_max(self) -> int:
+        """동전던지기 실패시, 베팅금액을 잃는 비율의 최대값을 반환합니다.
+
+        Returns:
+            int: 동전던지기 실패시, 베팅금액을 잃는 비율의 최대값
+        """
+        return self._settings['coinflip_loss_max']
 
     @property
     def ticitactoe_game_timeout(self) -> int | None:
