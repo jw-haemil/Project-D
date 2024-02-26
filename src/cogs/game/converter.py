@@ -25,6 +25,9 @@ class CoinBetConverter(commands.Converter):
             return await user_info.get_money()
 
         elif argument.endswith("%"):
+            if not argument[:-1].isnumeric():
+                raise commands.BadArgument("백분율은 정수로 입력해 주세요.")
+
             percent = int(argument[:-1])
             if not 0 < percent <= 100:
                 raise commands.BadArgument("백분율은 1~100 사이의 값이어야 합니다.")
