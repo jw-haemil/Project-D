@@ -4,6 +4,7 @@ from discord.ext import commands
 import random
 from typing import Optional
 
+from src.utils.math_utils import lerp
 from src.classes import command_checks
 from src.classes.bot import Bot, Cog
 from .view import TicTacToeInviteView
@@ -40,13 +41,13 @@ class Game(Cog):
             await ctx.reply(f"축하합니다! {face_str}면이 나와 {money:,}원을 받았습니다. (현재 자산: {await user_info.get_money():,}원)")
         else:
             face_str = "앞" if random_face else "뒷"
-            # 확정으로 반 차감, coinflip_total_loss_prob의 확률로 모두 잃음
-            if money == 1 or random.random() < self.bot_setting.coinflip_total_loss_prob:
+            loss_value = random.randint(1, round(lerp(2, 5, money / await user_info.get_money())))
+            if loss_value == 1:
                 await user_info.add_money(-money) # 돈 차감
                 await ctx.reply(f"안타깝게도 {face_str}면이 나와 배팅한 돈의 전부({-money:,}원)를 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
             else:
-                await user_info.add_money(-(money//2)) # 돈 차감
-                await ctx.reply(f"안타깝게도 {face_str}면이 나와 배팅한 돈의 절반({-(money//2):,}원)을 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
+                await user_info.add_money(-(money//loss_value)) # 돈 차감
+                await ctx.reply(f"안타깝게도 {face_str}면이 나와 배팅한 돈의 1/{loss_value} ({-(money//loss_value):,}원)을 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
 
     @coin_flip.error
     async def coin_flip_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
