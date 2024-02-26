@@ -32,5 +32,5 @@ class CoinBetConverter(commands.Converter):
 
         elif argument.isnumeric():
             return int(argument)
-        
+
         raise commands.BadArgument("베팅금액은 정수 또는 `올인`, `모두`로 입력해 주세요.") # 입력이 잘못되었을 때

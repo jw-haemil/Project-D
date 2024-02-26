@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .game import Game
 
+
 class TicTacToeButton(discord.ui.Button["TicTacToeView"]):
     def __init__(self, x: int, y: int):
         super().__init__(style=discord.ButtonStyle.gray, label="\u200b", row=y)
