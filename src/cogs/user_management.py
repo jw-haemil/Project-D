@@ -8,7 +8,8 @@ class UserManagement(Cog):
     @commands.command(
         name="사용자등록",
         aliases=["등록"],
-        description="데이터베이스에 사용자를 등록합니다."
+        description="데이터베이스에 사용자를 등록합니다.",
+        usage="사용자등록"
     )
     async def register_user(self, ctx: commands.Context[Bot]):
         user_info = self.database.get_user_info(ctx.author.id)

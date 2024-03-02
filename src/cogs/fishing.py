@@ -108,7 +108,8 @@ class Fishing(Cog):
     @commands.command(
         name="낚시",
         aliases=["ㄴㅅ"],
-        description="낚시를 합니다. 낚시도중 메시지가 바뀌었을 때, 반응을 누르면 물고기가 잡힙니다."
+        description="낚시를 합니다. 낚시도중 메시지가 바뀌었을 때, 반응을 누르면 물고기가 잡힙니다.",
+        usage="낚시"
     )
     @command_checks.is_registered()
     async def fishing(self, ctx: commands.Context[Bot]):

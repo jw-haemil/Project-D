@@ -150,9 +150,10 @@ class HelpCommand(commands.HelpCommand):
         )
         embed.add_field(
             name="사용법",
-            value=f"```{command.usage}```",
+            value=f"```{self.context.clean_prefix}{command.usage}```",
             inline=False
         )
+        embed.set_footer(text="[]는 선택, <>는 필수 입력값 입니다.")
         destination = self.get_destination()
         await destination.send(embed=embed)
 
@@ -166,3 +167,9 @@ class HelpCommand(commands.HelpCommand):
             )
         destination = self.get_destination()
         await destination.send(embed=embed)
+
+    def command_not_found(self, string: str) -> str:
+        pass
+
+    def subcommand_not_found(self, command: commands.Command, string: str) -> str:
+        pass
