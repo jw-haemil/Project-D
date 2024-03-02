@@ -21,7 +21,7 @@ class Bot(commands.Bot):
         intents.members = True
 
         super().__init__(
-            command_prefix=commands.when_mentioned_or("="), # 봇 접두사
+            command_prefix=commands.when_mentioned_or(";"), # 봇 접두사
             intents=intents, # 봇 기능 설정
             help_command=HelpCommand()
         )
@@ -52,9 +52,9 @@ class Bot(commands.Bot):
             elif filename.endswith(".py"):
                 await self.load_extension(f"src.cogs.{filename[:-3]}")
 
-        # GUILD_ID = discord.Object(id=os.getenv("DISCORD_GUILD_ID"))
-        # self.tree.copy_global_to(guild=GUILD_ID)
-        # await self.tree.sync(guild=GUILD_ID)
+        GUILD_ID = discord.Object(id=os.getenv("DISCORD_GUILD_ID"))
+        self.tree.copy_global_to(guild=GUILD_ID)
+        await self.tree.sync(guild=GUILD_ID)
 
     async def on_ready(self):
         self.logger.info(f"{self.user} 봇 준비 완료")
