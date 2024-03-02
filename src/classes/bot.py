@@ -114,14 +114,62 @@ class Cog(commands.Cog):
         self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
 
 
-class HelpCommand(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        destination = self.get_destination()
-        embed = discord.Embed(
-            color=discord.Color.random(),
-            description=""
-        )
-        for page in self.paginator.pages:
-            embed.description += page
+class HelpCommand(commands.HelpCommand):
+    def __init__(self):
+        super().__init__(command_attrs={"name": "도움말", "aliases": ["?", "help"]})
 
+    async def send_bot_help(self, mapping: dict[Cog, list[commands.Command]]):
+        embed = discord.Embed(title="도움말", color=discord.Color.random())
+        for cog, commands in mapping.items():
+            if cog is None or len(commands) == 0: continue
+            embed.add_field(
+                name=cog.qualified_name,
+                value=f"{', '.join(f'`{cmd.name}`' for cmd in commands)}",
+                inline=False
+            )
+        destination = self.get_destination()
         await destination.send(embed=embed)
+
+    async def send_cog_help(self, cog: Cog):
+        embed = discord.Embed(title=cog.qualified_name, color=discord.Color.random())
+        for cmd in cog.get_commands():
+            embed.add_field(
+                name=cmd.name,
+                value=cmd.description,
+                inline=False
+            )
+        destination = self.get_destination()
+        await destination.send(embed=embed)
+
+    async def send_command_help(self, command: commands.Command):
+        embed = discord.Embed(title=command.name, description=command.description, color=discord.Color.random())
+        embed.add_field(
+            name="별칭",
+            value=f"{', '.join(f'`{alias}`' for alias in command.aliases)}",
+            inline=False
+        )
+        embed.add_field(
+            name="사용법",
+            value=f"```{self.context.clean_prefix}{command.usage}```",
+            inline=False
+        )
+        embed.set_footer(text="[]는 선택, <>는 필수 입력값 입니다.")
+        destination = self.get_destination()
+        await destination.send(embed=embed)
+
+    async def send_group_help(self, group: commands.Group):
+        embed = discord.Embed(title=group.name, description=group.description, color=discord.Color.random())
+        for cmd in group.commands:
+            embed.add_field(
+                name=cmd.name,
+                value=cmd.description,
+                inline=False
+            )
+        destination = self.get_destination()
+        await destination.send(embed=embed)
+
+    def command_not_found(self, string: str) -> str:
+        pass
+
+    def subcommand_not_found(self, command: commands.Command, string: str) -> str:
+        pass

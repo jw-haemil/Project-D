@@ -19,7 +19,8 @@ class Game(Cog):
     @commands.command(
         name="동전던지기",
         aliases=["동전", "동전뒤집기", "ㄷㅈ"],
-        description="금액을 걸고 동전 던지기 게임을 시작합니다."
+        description="금액을 걸고 동전 던지기 게임을 시작합니다.",
+        usage="동전던지기 [앞|뒤] [금액|올인/모두]"
     )
     @command_checks.is_registered()
     async def coin_flip(self, ctx: commands.Context[Bot], face: CoinFaceConverter, money: CoinBetConverter):
@@ -66,6 +67,7 @@ class Game(Cog):
         name="틱택토",
         aliases=["ㅌㅌㅌ", "ttt"],
         description="틱택토 게임을 합니다.",
+        usage="틱택토 [유저명]"
     )
     @command_checks.is_registered()
     async def tic_tac_toe(self, ctx: commands.Context[Bot], another: Optional[discord.Member] = None):

@@ -10,9 +10,10 @@ from src.classes.bot import Bot, Cog
 
 class Finance(Cog):
     @commands.command(
-        name="내자산",
+        name="자산정보",
         aliases=["돈", "자산", "잔액", "잔고", "ㄷ"],
-        description="내 자산, 타인의 자산을 확인합니다."
+        description="내 자산, 타인의 자산을 확인합니다.",
+        usage="자산정보 [유저명]"
     )
     async def asset_info(self, ctx: commands.Context[Bot], other_user: discord.Member = None):
         user = ctx.author if other_user is None or other_user == ctx.author else other_user
@@ -35,7 +36,9 @@ class Finance(Cog):
 
     @commands.command(
         name="랭킹",
-        aliases=["순위", "ㄹㅋ"]
+        aliases=["순위", "ㄹㅋ"],
+        description="자산 순위를 확인합니다.",
+        usage="랭킹"
     )
     async def ranking(self, ctx: commands.Context[Bot]):
         info = tuple( # db에서 유저정보 가져오기
@@ -65,7 +68,8 @@ class Finance(Cog):
     @commands.command(
         name="돈받기",
         aliases=["ㄷㅂㄱ", "지원금", "ㅊㅊ", "출첵", "출석체크"],
-        description="돈을 받습니다."
+        description="일정시간마다 돈을 받습니다.",
+        usage="돈받기"
     )
     @command_checks.is_registered() # 사용자 등록 여부 확인
     async def attendance(self, ctx: commands.Context[Bot]):
@@ -99,7 +103,8 @@ class Finance(Cog):
     @commands.command(
         name="송금",
         aliases=["ㅅㄱ"],
-        description="다른 사람에게 돈을 보냅니다."
+        description="다른 사람에게 돈을 보냅니다.",
+        usage="송금 [유저명] [금액]"
     )
     @command_checks.is_registered() # 사용자 등록 여부 확인
     async def send_money(self, ctx: commands.Context[Bot], other_user: discord.Member, money: int):
