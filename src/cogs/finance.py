@@ -33,6 +33,12 @@ class Finance(Cog):
         embed.add_field(name="자산", value=f"{await user_info.get_money():,}원")
         await ctx.reply(embed=embed)
 
+    @asset_info.error
+    async def asset_info_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("사용자를 다시한번 확인해 주세요.")
+            ctx.command_failed = False
+
 
     @commands.command(
         name="랭킹",
