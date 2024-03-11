@@ -2,7 +2,7 @@ import random
 import logging
 from typing import TYPE_CHECKING
 
-from src.classes.enums import FishRating, fish_kor_name
+from src.classes.enums import EFishRating, fish_kor_name
 
 if TYPE_CHECKING:
     from .data_sql import DataSQL
@@ -53,13 +53,13 @@ class Fish():
         return self._name
 
     @property
-    def rating(self) -> FishRating:
+    def rating(self) -> EFishRating:
         """물고기의 등급을 반환합니다.
 
         Returns:
             FishRating: 물고기 등급
         """
-        return FishRating(self._rating)
+        return EFishRating(self._rating)
 
     @property
     def rating_str(self) -> str:
@@ -121,23 +121,23 @@ class FishInfo():
     def _return_value(self, result: list[tuple]) -> list[Fish]:
         return [Fish(
             id=int(row[0]),
-            name=row[1],
-            rating=int(row[2]),
-            min_length=int(row[3]),
-            max_length=int(row[4]),
-            default_price=int(row[5]),
-            const_value=float(row[6]),
-            description=row[7]
+            name=row[2],
+            rating=int(row[3]),
+            min_length=int(row[4]),
+            max_length=int(row[5]),
+            default_price=int(row[6]),
+            const_value=float(row[7]),
+            description=row[8]
         ) for row in result]
 
-    def _choose_grade(self) -> FishRating:
+    def _choose_grade(self) -> EFishRating:
         grade_prob = { # 물고기 등급 확률
-            FishRating.COMMON: 62.825,
-            FishRating.UNCOMMON: 30,
-            FishRating.RARE: 5,
-            FishRating.EPIC: 2,
-            FishRating.LEGENDARY: 0.1,
-            FishRating.MYTHIC: 0.025,
+            EFishRating.COMMON: 62.825,
+            EFishRating.UNCOMMON: 30,
+            EFishRating.RARE: 5,
+            EFishRating.EPIC: 2,
+            EFishRating.LEGENDARY: 0.1,
+            EFishRating.MYTHIC: 0.025,
         }
         return random.choices(list(grade_prob.keys()), weights=grade_prob.values())[0]
 
@@ -151,5 +151,10 @@ class FishInfo():
         """
         grade = self._choose_grade() # 물고기 등급 선택
         logger.debug(f"Getting random fish of grade {grade}")
-        result = await self._database._query("SELECT * FROM fish_info WHERE rating=%s ORDER BY RAND() LIMIT 1", (grade.value,), fetch=True)
+        result = await self._database._query(
+            "SELECT * FROM item_types INNER JOIN fish_info ON item_types.id = fish_info.foreign_id WHERE item_types.type = 'fish' AND rating = %s ORDER BY RAND() LIMIT 1",
+            (grade.value,),
+            fetch=True
+        )
+
         return self._return_value(result)[0]
