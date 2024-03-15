@@ -97,6 +97,7 @@ class UserInfo():
         Args:
             money (int): 돈
         """
+        # TODO: Out of range error 수정하기
         logger.debug(f"Adding money of user {self._user_id}")
         await self._database._query("UPDATE user_info SET money=money+%s WHERE id=%s", (money, self._user_id))
 
