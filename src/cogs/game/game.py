@@ -48,7 +48,7 @@ class Game(Cog):
                 money / await user_info.get_money()
             )))
             loss_money = 1 if money//loss_value < 1 else money//loss_value
-            message = "전부" if loss_value == 1 else f"1/{loss_value} "
+            message = "전부" if loss_value == 1 or loss_money == 1 else f"1/{loss_value} "
             await user_info.add_money(-loss_money) # 돈 차감
             await ctx.reply(f"안타깝게도 {face_str}면이 나와 배팅한 돈의 {message}({-loss_money:,}원)를 잃었습니다. (현재 자산: {await user_info.get_money():,}원)")
 
