@@ -12,27 +12,36 @@ from .types import YTDL_OPTIONS, FFMPEG_OPTIONS
 
 class Music(Cog):
     async def cog_before_invoke(self, ctx: commands.Context[Bot]):
+        # TODO: subcommand가 아닌 경우도 로깅 코드 작성
         if ctx.invoked_subcommand is not None:
             self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
 
 
-    def _get_voice_client(self, ctx: commands.Context[Bot]) -> discord.VoiceClient | None:
-        return _result.pop() if (_result := set([ctx.guild.voice_client]) & set(self.bot.voice_clients)) else None
+    def _get_bot_voice_client(self, ctx: commands.Context[Bot]) -> discord.VoiceClient | None:
+        """
+        봇의 음성 클라이언트를 가져오는 메서드입니다.
+
+        Parameters:
+            ctx (commands.Context[Bot]): 명령어가 실행된 컨텍스트 객체
+
+        Returns:
+            discord.VoiceClient | None: 음성 클라이언트 객체 또는 None
+        """
+        return _result.pop() if (_result := {ctx.guild.voice_client} & set(self.bot.voice_clients)) else None
 
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
-        if member.bot:
+        bot_voice_client = self._get_bot_voice_client(member)
+        if (
+            member.bot or # member가 봇일 경우
+            bot_voice_client is None or # 봇이 음성 채널에 연결되어 있지 않을 경우
+            any(channel.channel == bot_voice_client.channel for channel in (before, after)) # 봇이 있는 음성 채널에서 발생한 이벤트가 아닌 경우
+        ):
             return
 
-        # 봇이 음성 채널에 없을 경우
-        bot_voice_client = self._get_voice_client(member)
-        if bot_voice_client is None:
-            return
-
-        voice_client: discord.VoiceClient = bot_voice_client
-        if len(voice_client.channel.members) == 1: # 봇만 남았을 경우
-            await voice_client.disconnect()
+        if len([user for user in bot_voice_client.channel.members if not user.bot]) == 0: # 유저가 없을 경우
+            await bot_voice_client.disconnect()
 
 
     @commands.group(
@@ -75,7 +84,7 @@ class Music(Cog):
             await ctx.reply("먼저 음성 채널에 들어가주세요.")
             return
 
-        bot_voice_client = self._get_voice_client(ctx)
+        bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is not None:
             if (
                 (_number_of_user := len([user for user in bot_voice_client.channel.members if not user.bot])) == 0 or
@@ -111,7 +120,7 @@ class Music(Cog):
         usage="음악 나가기"
     )
     async def disconnect(self, ctx: commands.Context[Bot]):
-        bot_voice_client = self._get_voice_client(ctx)
+        bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
             await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
             return
@@ -137,7 +146,7 @@ class Music(Cog):
         if ctx.voice_client is None:
             ctx.author.voice.channel.connect(self_deaf=True)
 
-        bot_voice_client = _result.pop() if (_result := set([ctx.guild.voice_client]) & set(self.bot.voice_clients)) else None
+        bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
             await ctx.voice_client.connect(self_deaf=True)
 
@@ -165,7 +174,7 @@ class Music(Cog):
         usage="음악 컨트롤"
     )
     async def control(self, ctx: commands.Context[Bot]):
-        bot_voice_client = self._get_voice_client(ctx)
+        bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
             await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
             return
@@ -183,7 +192,7 @@ class Music(Cog):
         usage="음악 재생목록"
     )
     async def playlist(self, ctx: commands.Context[Bot]):
-        bot_voice_client = self._get_voice_client(ctx)
+        bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
             await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
             return
