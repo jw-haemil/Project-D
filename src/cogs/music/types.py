@@ -2,7 +2,7 @@ from discord.ui import Button
 from typing import TypedDict
 
 
-class ControlDict(TypedDict):
+class ControlButtonDict(TypedDict):
     volum_up: Button
     volum_down: Button
     next: Button
@@ -12,6 +12,9 @@ class ControlDict(TypedDict):
     loop: Button
     shuffle: Button
 
+class QueuePageButtonDict(TypedDict):
+    prev: Button
+    next: Button
 
 FFMPEG_OPTIONS = {"options": "-vn"}
 YTDL_OPTIONS = {

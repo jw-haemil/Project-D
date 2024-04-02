@@ -6,7 +6,7 @@ import yt_dlp
 import requests
 
 from src.classes.bot import Bot, Cog
-from .view import ControlView
+from .view import ControlView, QueuePageView
 from .types import YTDL_OPTIONS, FFMPEG_OPTIONS
 
 
@@ -178,9 +178,6 @@ class Music(Cog):
         if bot_voice_client is None:
             await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
             return
-        elif len(bot_voice_client.channel.members) > 1:
-            await ctx.reply("음악을 듣고 있는 사람이 있어 나갈 수 없습니다.")
-            return
 
         await ctx.send(view=ControlView(self))
 
@@ -192,12 +189,4 @@ class Music(Cog):
         usage="음악 재생목록"
     )
     async def playlist(self, ctx: commands.Context[Bot]):
-        bot_voice_client = self._get_bot_voice_client(ctx)
-        if bot_voice_client is None:
-            await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
-            return
-        elif len(bot_voice_client.channel.members) > 1:
-            await ctx.reply("음악을 듣고 있는 사람이 있어 나갈 수 없습니다.")
-            return
-
-        # TODO: 재생목록 코드 작성
+        await ctx.send(view=QueuePageView(self))
