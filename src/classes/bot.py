@@ -165,6 +165,7 @@ class HelpCommand(commands.HelpCommand):
                 value=cmd.description,
                 inline=False
             )
+        embed.set_footer(text=f"{self.context.clean_prefix}{group.name} [명령어]로 사용 가능합니다.")
         destination = self.get_destination()
         await destination.send(embed=embed)
 
