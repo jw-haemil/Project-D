@@ -92,7 +92,7 @@ class Music(Cog):
                 (_number_of_user := len([user for user in bot_voice_client.channel.members if not user.bot])) == 0 or
                 (_number_of_user >= 1 and not bot_voice_client.is_playing() and not bot_voice_client.is_paused())
             ):
-                await bot_voice_client.move_to(user_voice_channel)
+                await bot_voice_client.channel.guild.change_voice_state(channel=user_voice_channel, self_deaf=True)
                 await ctx.message.reply(f"<#{user_voice_channel.id}> 채널로 이동했습니다.")
                 return
             elif bot_voice_client.is_playing() or bot_voice_client.is_paused():
