@@ -36,7 +36,7 @@ class Music(Cog):
         if (
             member.bot or # member가 봇일 경우
             bot_voice_client is None or # 봇이 음성 채널에 연결되어 있지 않을 경우
-            any(channel.channel == bot_voice_client.channel for channel in (before, after)) # 봇이 있는 음성 채널에서 발생한 이벤트가 아닌 경우
+            not any(channel.channel == bot_voice_client.channel for channel in (before, after)) # 봇이 있는 음성 채널에서 발생한 이벤트가 아닌 경우
         ):
             return
 
@@ -51,17 +51,19 @@ class Music(Cog):
         usage="음악 [명령어]"
     )
     async def music(self, ctx: commands.Context[Bot]):
-        if ctx.invoked_subcommand is None:
-            group: commands.Group = ctx.command
-            embed = discord.Embed(title=group.name, description=group.description, color=discord.Color.random())
-            for cmd in group.commands:
-                embed.add_field(
-                    name=cmd.name,
-                    value=cmd.description,
-                    inline=False
-                )
-            embed.set_footer(text=f"{ctx.clean_prefix}{group.name} [명령어]로 사용 가능합니다.")
-            await ctx.send(embed=embed)
+        if ctx.invoked_subcommand is not None: # subcommand가 있는 경우
+            return
+
+        group: commands.Group = ctx.command
+        embed = discord.Embed(title=group.name, description=group.description, color=discord.Color.random())
+        for cmd in group.commands:
+            embed.add_field(
+                name=cmd.name,
+                value=cmd.description,
+                inline=False
+            )
+        embed.set_footer(text=f"{ctx.clean_prefix}{group.name} [명령어]로 사용 가능합니다.")
+        await ctx.send(embed=embed)
 
 
     @music.command(
@@ -189,4 +191,24 @@ class Music(Cog):
         usage="음악 재생목록"
     )
     async def playlist(self, ctx: commands.Context[Bot]):
-        await ctx.send(view=QueuePageView(self))
+        if ctx.invoked_subcommand is not None: # subcommand가 있는 경우
+            return
+
+        if ctx.subcommand_passed is None:
+            await ctx.send(view=QueuePageView(self))
+        else:
+            group: commands.Group = ctx.command
+            embed = discord.Embed(
+                title=f"{group.full_parent_name} {group.name}",
+                description=group.description,
+                color=discord.Color.random()
+            )
+            for cmd in group.commands:
+                embed.add_field(
+                    name=cmd.name,
+                    value=cmd.description,
+                    inline=False
+                )
+            embed.set_footer(text=f"{ctx.clean_prefix}{group.full_parent_name} {group.name} [명령어]로 사용 가능합니다.")
+            await ctx.send(embed=embed)
+
