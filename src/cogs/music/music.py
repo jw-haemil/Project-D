@@ -12,22 +12,20 @@ from .types import YTDL_OPTIONS, FFMPEG_OPTIONS
 
 class Music(Cog):
     async def cog_before_invoke(self, ctx: commands.Context[Bot]):
-        # TODO: subcommand가 아닌 경우도 로깅 코드 작성
-        if ctx.invoked_subcommand is not None:
-            self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
+        self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
 
 
-    def _get_bot_voice_client(self, ctx: commands.Context[Bot]) -> discord.VoiceClient | None:
+    def _get_bot_voice_client(self, guild: discord.abc.GuildChannel) -> discord.VoiceClient | None:
         """
         봇의 음성 클라이언트를 가져오는 메서드입니다.
 
         Parameters:
-            ctx (commands.Context[Bot]): 명령어가 실행된 컨텍스트 객체
+            guild (discord.abc.GuildChannel): GuildChannel이 있는 겍체
 
         Returns:
             discord.VoiceClient | None: 음성 클라이언트 객체 또는 None
         """
-        return _result.pop() if (_result := {ctx.guild.voice_client} & set(self.bot.voice_clients)) else None
+        return _result.pop() if (_result := {guild.guild.voice_client} & set(self.bot.voice_clients)) else None
 
 
     @commands.Cog.listener()
@@ -88,7 +86,10 @@ class Music(Cog):
 
         bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is not None:
-            if (
+            if bot_voice_client.channel == user_voice_channel:
+                await ctx.reply("이미 연결되어 있습니다.")
+                return
+            elif (
                 (_number_of_user := len([user for user in bot_voice_client.channel.members if not user.bot])) == 0 or
                 (_number_of_user >= 1 and not bot_voice_client.is_playing() and not bot_voice_client.is_paused())
             ):
@@ -97,9 +98,6 @@ class Music(Cog):
                 return
             elif bot_voice_client.is_playing() or bot_voice_client.is_paused():
                 await ctx.reply("다른 음성 채널에서 봇이 사용 중입니다.")
-                return
-            elif bot_voice_client.channel == user_voice_channel:
-                await ctx.reply("이미 연결되어 있습니다.")
                 return
             else:
                 self.logger.warning("Unknown error occurred.")
