@@ -4,6 +4,7 @@ from discord.ext import commands
 import os
 import logging
 
+from src.classes.redis_cache import RedisCache
 from src.classes.database import DataSQL
 from src.classes.errors import NotRegisteredUser
 
@@ -14,6 +15,7 @@ class Bot(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger("discord.classes.Bot") # 로깅 설정
         self.database = None
+        self.redis_cache = None
         self.bot_setting = None
 
         intents = discord.Intents.default()
@@ -33,14 +35,25 @@ class Bot(commands.Bot):
             port=os.getenv("MYSQL_PORT"),
             loop=self.loop
         )
-        await self.database.auth(
+        assert await self.database.auth(
             user=os.getenv("MYSQL_USER"),
             password=os.getenv("MYSQL_PASSWORD"),
             database=os.getenv("MYSQL_DB_NAME"),
-        )
+        ), "MySql connection failed"
 
         if self.database.pool is not None:
             self.bot_setting = await self.database.get_bot_setting()
+
+        # Redis 관련 코드
+        self.redis_cache = RedisCache(
+            host=os.getenv("REDIS_HOST"),
+            port=os.getenv("REDIS_PORT"),
+            db=os.getenv("REDIS_DB")
+        )
+        assert self.redis_cache.auth(
+            username=os.getenv("REDIS_USER"),
+            password=os.getenv("REDIS_PASSWORD")
+        ), "Redis connection failed"
 
         # Cog 관련 코드
         for filename in os.listdir("./src/cogs"):
@@ -95,6 +108,10 @@ class Bot(commands.Bot):
     async def close(self) -> None:
         if self.database is not None:
             await self.database.close()
+
+        if self.redis_cache is not None:
+            await self.redis_cache.close()
+
         await super().close()
 
 
