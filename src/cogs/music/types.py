@@ -1,4 +1,4 @@
-from discord.ui import Button
+from discord.ui import Button, Select
 from typing import TypedDict
 
 
@@ -15,6 +15,13 @@ class ControlButtonDict(TypedDict):
 class QueuePageButtonDict(TypedDict):
     prev: Button
     next: Button
+
+class SearchViewButtonDict(TypedDict):
+    prev: Button
+    next: Button
+    cancel: Button
+    search: Select
+
 
 FFMPEG_OPTIONS = {"options": "-vn"}
 YTDL_OPTIONS = {

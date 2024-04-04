@@ -3,10 +3,10 @@ from discord.ext import commands
 
 import re
 import yt_dlp
-import requests
 
 from src.classes.bot import Bot, Cog
-from .view import ControlView, QueuePageView
+from src.classes.youtube_search import YoutubeSearchAPI
+from .view import ControlView, QueuePageView, SearchView
 from .types import YTDL_OPTIONS, FFMPEG_OPTIONS
 
 
@@ -142,27 +142,62 @@ class Music(Cog):
         description="음악을 재생합니다.",
         usage="음악 재생 [검색어 | URL]"
     )
-    async def play(self, ctx: commands.Context[Bot], query: str = None):
-        if ctx.voice_client is None:
-            ctx.author.voice.channel.connect(self_deaf=True)
+    async def play(self, ctx: commands.Context[Bot], *, query: str = None):
+        # TODO: 검색 후 채널 연걸
+        # # 음성 채널 연결
+        if ctx.author.voice is None:
+            await ctx.reply("먼저 음성 채널에 들어가주세요.")
+            return
 
         bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
-            await ctx.voice_client.connect(self_deaf=True)
+            await ctx.author.voice.channel.connect(self_deaf=True)
 
+        # TODO: 재생목록에서 재생 코드 작성
         if query is None:
-            # TODO: 재생목록에서 재생 코드 작성
             ...
-        else:
-            search_flag = True
-            if re.match(r"^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+", query):
-                with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ydl:
-                    music_info = ydl.extract_info(query, download=False)
-                    search_flag = music_info is not None
+            return
 
-            if search_flag:
-                # TODO: 검색 코드 작성
-                ...
+        # TODO: 만약 플레이리스트 URL이면 재생목록에 바로 추가하는 코드 작성
+        search_flag = True
+        if re.match(r"^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+", query):
+            with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ydl:
+                music_info = ydl.extract_info(query, download=False)
+                search_flag = music_info is not None
+
+        # 검색기능
+        if search_flag:
+            search_api = YoutubeSearchAPI(redis_cache=self.bot.redis_cache)
+            snippets = await search_api.search(query=query, max_results=5)
+
+            # SearchView 관련 코드
+            search_view = SearchView(context=ctx, search_api=search_api, snippets=snippets)
+            async def search_view_on_timeout(_search_view: SearchView, _message: discord.Message):
+                _search_view.stop()
+                try:
+                    message = await _message.fetch()
+                except discord.NotFound:
+                    return
+                await message.edit(view=None)
+
+            # 검색결과 Embed
+            embed = discord.Embed(
+                title="검색결과",
+                description=f"검색어: {query}",
+                timestamp=ctx.message.created_at,
+                url=f"https://www.youtube.com/results?search_query={query}",
+                color=discord.Color.random()
+            )
+            for n, snippet in enumerate(snippets):
+                embed.add_field(
+                    name=f"{(n + 1) + (search_view.result_size * search_view.current_page)}. {snippet.title}",
+                    value=f"[{snippet.channel_title}]({snippet.channel_url}) | {snippet.video_duration}",
+                    inline=False
+                )
+            embed.set_footer(text=f"Page {search_view.current_page + 1}/{search_view.max_page}")
+
+            message = await ctx.send(embed=embed, view=search_view)
+            search_view.on_timeout = lambda: search_view_on_timeout(search_view, message)
 
         # TODO: 음악 재생 코드 작성
 
@@ -194,19 +229,20 @@ class Music(Cog):
 
         if ctx.subcommand_passed is None:
             await ctx.send(view=QueuePageView(self))
-        else:
-            group: commands.Group = ctx.command
-            embed = discord.Embed(
-                title=f"{group.full_parent_name} {group.name}",
-                description=group.description,
-                color=discord.Color.random()
+            return
+
+        group: commands.Group = ctx.command
+        embed = discord.Embed(
+            title=f"{group.full_parent_name} {group.name}",
+            description=group.description,
+            color=discord.Color.random()
+        )
+        for cmd in group.commands:
+            embed.add_field(
+                name=cmd.name,
+                value=cmd.description,
+                inline=False
             )
-            for cmd in group.commands:
-                embed.add_field(
-                    name=cmd.name,
-                    value=cmd.description,
-                    inline=False
-                )
-            embed.set_footer(text=f"{ctx.clean_prefix}{group.full_parent_name} {group.name} [명령어]로 사용 가능합니다.")
-            await ctx.send(embed=embed)
+        embed.set_footer(text=f"{ctx.clean_prefix}{group.full_parent_name} {group.name} [명령어]로 사용 가능합니다.")
+        await ctx.send(embed=embed)
 

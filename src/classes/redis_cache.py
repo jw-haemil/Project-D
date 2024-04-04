@@ -1,3 +1,4 @@
+import json
 import aioredis
 import logging
 
@@ -76,6 +77,21 @@ class RedisCache:
             return await self.pool.get(key)
         return None
 
+    async def get_cache_from_json(self, key: str) -> dict | None:
+        """
+        지정된 키에 대한 JSON 형식의 캐시 값을 가져옵니다.
+
+        Parameters:
+            key (str): 가져올 데이터의 키입니다.
+
+        Returns:
+            dict | None: 캐시 값 (딕셔너리) 또는 캐시가 없을 경우 None
+        """
+        if self.pool is not None:
+            value = await self.pool.get(key)
+            return json.loads(value) if value is not None else None
+        return None
+
     async def set_cache(self, key: str, value: str, expire: int = 600) -> bool:
         """
         지정된 키와 값을 Redis 캐시에 저장합니다.
@@ -90,6 +106,23 @@ class RedisCache:
         """
         if self.pool is not None:
             await self.pool.set(key, value, ex=expire)
+            return True
+        return False
+
+    async def set_cache_to_json(self, key: str, value: dict | list, expire: int = 600) -> bool:
+        """
+        지정된 키와 값을 JSON 형식으로 Redis 캐시에 저장합니다.
+
+        Parameters:
+            key (str): 저장할 데이터의 키입니다.
+            value (dict): 저장할 데이터의 값입니다.
+            expire (int, optional): 데이터의 만료 시간(초)입니다. 기본값은 600(10분)입니다.
+
+        Returns:
+            bool: 캐시 저장에 성공하면 True를 반환합니다.
+        """
+        if self.pool is not None:
+            await self.pool.set(key, json.dumps(value, ensure_ascii=False), ex=expire)
             return True
         return False
 
