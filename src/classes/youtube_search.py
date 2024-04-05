@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta
 
 from src.classes.redis_cache import RedisCache
+from src.cogs.music.types import MusicInfo
 
 logger = logging.getLogger("discord.classes.YoutubeSearchAPI")
 
@@ -26,10 +27,10 @@ class YoutubeSearchAPI:
     ) -> list["Snippet"]:
         """검색어에 대한 동영상 정보를 반환합니다."""
         query_cache = await self.redis_cache.get_cache_to_json(
-            key=f"{query}:{page_token}"
+            key=f"{query}:{page_token or 'FirstPage'}"
         )
         if query_cache is not None:
-            logger.debug(f"Cache hit: {query}:{page_token}")
+            logger.debug(f"Cache hit: {query}:{page_token or 'FirstPage'}")
             return [Snippet(item) for item in query_cache]
 
         async with aiohttp.ClientSession() as session:
@@ -67,12 +68,12 @@ class YoutubeSearchAPI:
             lambda search, video: search | video | {
                 "query": query,
                 "nextPageToken": search_snippet['nextPageToken'],
-                "currentPageToken": page_token if page_token is not None else "FirstPage",
+                "currentPageToken": page_token or "FirstPage",
                 "prevPageToken": current_page_token,
             },
             search_snippet['items'], video_snippet['items']
         ))
-        await self.redis_cache.set_cache_from_json(f"{query}:{page_token if page_token is not None else 'FirstPage'}", result_snippets, expire=24*3600)
+        await self.redis_cache.set_cache_from_json(f"{query}:{page_token or 'FirstPage'}", result_snippets, expire=24*3600)
         return [Snippet(snippet) for snippet in result_snippets]
 
 
@@ -106,6 +107,16 @@ class TimeDelta:
 class Snippet:
     def __init__(self, snippet: dict):
         self.snippet = snippet
+
+    def to_music_info(self) -> MusicInfo:
+        """MusicInfo로 변환합니다."""
+        return MusicInfo(
+            _name=self.title,
+            _video_id=self.video_id,
+            _channel_title=self.channel_title,
+            _channel_id=self.channel_id,
+            _duration=self.video_duration.total_seconds
+        )
 
     @property
     def query(self) -> str:
