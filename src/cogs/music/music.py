@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+import asyncio
 import re
 import yt_dlp
 
@@ -8,12 +9,14 @@ from src.classes.bot import Bot, Cog
 from src.classes.youtube_search import YoutubeSearchAPI
 from .view import ControlView, QueuePageView, SearchView
 from .types import YTDL_OPTIONS, FFMPEG_OPTIONS
+from .playlist import MusicPlaylist, MusicHistory, MusicInfo
 
 
 class Music(Cog):
-    async def cog_before_invoke(self, ctx: commands.Context[Bot]):
-        self.logger.info(f"{ctx.author}({ctx.author.id}) | {ctx.command} | {ctx.message.content}")
-
+    def __init__(self, bot: Bot):
+        super().__init__(bot)
+        self.music_playlist = MusicPlaylist(redis=bot.redis_cache)
+        self.music_history = MusicHistory(redis=bot.redis_cache)
 
     def _get_bot_voice_client(self, guild: discord.abc.GuildChannel) -> discord.VoiceClient | None:
         """
@@ -136,6 +139,34 @@ class Music(Cog):
         await ctx.message.add_reaction("👌")
 
 
+    async def _after_next_music(
+        self,
+        expt: Exception | None,
+        context: commands.Context[Bot],
+        bot_voice_client: discord.VoiceClient,
+        prev_music: MusicInfo
+    ):
+        if expt is not None:
+            self.logger.error(expt)
+            return
+
+        await self.music_history.add_music(context.guild.id, prev_music)
+        new_music = await self.music_playlist.pop_music(context.guild.id)
+
+        if new_music is None or not bot_voice_client.is_connected():
+            return
+
+        bot_voice_client.play(
+            discord.PCMVolumeTransformer(
+                discord.FFmpegPCMAudio(
+                    await new_music.get_stream_url(),
+                    **FFMPEG_OPTIONS
+                ),
+                volume=bot_voice_client.source.volume if bot_voice_client.source is not None else .75
+            ),
+            after=lambda e: self.bot.loop.create_task(self._after_next_music(e, context, bot_voice_client, new_music))
+        )
+
     @music.command(
         name="재생",
         aliases=["ㅈㅅ"],
@@ -144,62 +175,141 @@ class Music(Cog):
     )
     async def play(self, ctx: commands.Context[Bot], *, query: str = None):
         # TODO: 검색 후 채널 연걸
-        # # 음성 채널 연결
+        async def connect_voice_channel() -> discord.VoiceClient:
+            bot_voice_client = self._get_bot_voice_client(ctx)
+            if bot_voice_client is None:
+                await ctx.author.voice.channel.connect(self_deaf=True)
+            return bot_voice_client or self._get_bot_voice_client(ctx)
+
         if ctx.author.voice is None:
             await ctx.reply("먼저 음성 채널에 들어가주세요.")
             return
 
-        bot_voice_client = self._get_bot_voice_client(ctx)
-        if bot_voice_client is None:
-            await ctx.author.voice.channel.connect(self_deaf=True)
-
-        # TODO: 재생목록에서 재생 코드 작성
+        # 플레이리스트에서 음악을 가져와서 재생
         if query is None:
-            ...
+            music = await self.music_playlist.pop_music(ctx.guild.id)
+            if music is None:
+                await ctx.reply("플레이리스트가 비어있습니다. 검색어 또는 URL을 입력해주세요.")
+                return
+
+            if ctx.author.voice is None:
+                await ctx.reply("먼저 음성 채널에 들어가주세요.")
+                return
+
+            message = await ctx.send("잠시만 기다려주세요...")
+            bot_voice_client = await connect_voice_channel()
+            bot_voice_client.play(
+                discord.PCMVolumeTransformer(
+                    discord.FFmpegPCMAudio(
+                        await music.get_stream_url(),
+                        **FFMPEG_OPTIONS
+                    ),
+                    volume=0.75
+                ),
+                after=lambda e: self.bot.loop.create_task(self._after_next_music(e, ctx, bot_voice_client, music))
+            )
+
+            embed = discord.Embed(
+                title="음악 재생",
+                description=f"[{music.title}]({music.video_url})를 재생합니다.",
+                color=discord.Color.random()
+            )
+            await message.edit(content=None, embed=embed)
             return
 
         # TODO: 만약 플레이리스트 URL이면 재생목록에 바로 추가하는 코드 작성
-        search_flag = True
+        # query가 URL인 경우
+        search_flag = False
         if re.match(r"^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+", query):
-            with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ydl:
-                music_info = ydl.extract_info(query, download=False)
-                search_flag = music_info is not None
+            def _get_music_info():
+                with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ydl:
+                    return ydl.extract_info(query, download=False)
+
+            message = await ctx.send("잠시만 기다려주세요...")
+            music_info = await self.bot.loop.run_in_executor(None, _get_music_info)
+            if music_info is not None:
+                search_flag = True
+                if ctx.author.voice is None:
+                    await message.edit(content="먼저 음성 채널에 들어가주세요.")
+                    return
+                bot_voice_client = await connect_voice_channel()
+
+                await self.music_playlist.add_music(
+                    guild_id=ctx.guild.id,
+                    music=(music_info := MusicInfo(
+                        _name=music_info['title'],
+                        _video_id=music_info['id'],
+                        _channel_title=music_info['uploader'],
+                        _channel_id=music_info['uploader_id'],
+                        _duration=music_info['duration'],
+                        _stream_url=music_info['url']
+                    ))
+                )
+
+                # 음악이 재생중이거나 일시정지 중인 경우 플레이리스트에 추가
+                if bot_voice_client.is_playing() or bot_voice_client.is_paused():
+                    embed = discord.Embed(
+                        title="음악 추가",
+                        description=f"[{music_info.title}]({music_info.video_url})가\n플레이리스트에 추가했습니다.",
+                        color=discord.Color.random()
+                    )
+                    await message.edit(content="이미 재생중인 음악이 있어 플레이리스트에 추가되었습니다.", embed=embed)
+                    return
+
+                # 음악 재생
+                bot_voice_client.play(
+                    discord.PCMVolumeTransformer(
+                        discord.FFmpegPCMAudio(
+                            await music_info.get_stream_url(),
+                            **FFMPEG_OPTIONS
+                        ),
+                        volume=0.75
+                    ),
+                    after=lambda e: self.bot.loop.create_task(self._after_next_music(e, ctx, bot_voice_client, music_info))
+                )
+
+                embed = discord.Embed(
+                    title="음악 재생",
+                    description=f"[{music_info.title}]({music_info.video_url})를 재생합니다.",
+                    color=discord.Color.random()
+                )
+                await message.edit(content=None, embed=embed)
+
+        if search_flag: # query가 올바른 URL인 경우
+            return
 
         # 검색기능
-        if search_flag:
-            search_api = YoutubeSearchAPI(redis_cache=self.bot.redis_cache)
-            snippets = await search_api.search(query=query, max_results=5)
+        search_api = YoutubeSearchAPI(redis_cache=self.bot.redis_cache)
+        snippets = await search_api.search(query=query, max_results=5)
 
-            # SearchView 관련 코드
-            search_view = SearchView(context=ctx, search_api=search_api, snippets=snippets)
-            async def search_view_on_timeout(_search_view: SearchView, _message: discord.Message):
-                _search_view.stop()
-                try:
-                    message = await _message.fetch()
-                except discord.NotFound:
-                    return
-                await message.edit(view=None)
+        # SearchView 관련 코드
+        search_view = SearchView(cog=self, context=ctx, search_api=search_api, snippets=snippets)
+        async def search_view_on_timeout(_search_view: SearchView, _message: discord.Message):
+            _search_view.stop()
+            try:
+                message = await _message.fetch()
+            except discord.NotFound:
+                return
+            await message.edit(view=None)
 
-            # 검색결과 Embed
-            embed = discord.Embed(
-                title="검색결과",
-                description=f"검색어: {query}",
-                timestamp=ctx.message.created_at,
-                url=f"https://www.youtube.com/results?search_query={query}",
-                color=discord.Color.random()
+        # 검색결과 Embed
+        embed = discord.Embed(
+            title="검색결과",
+            description=f"검색어: {query}",
+            timestamp=ctx.message.created_at,
+            url=f"https://www.youtube.com/results?search_query={query.replace(' ', '+')}",
+            color=discord.Color.random()
+        )
+        for n, snippet in enumerate(snippets):
+            embed.add_field(
+                name=f"{(n + 1) + (search_view.result_size * search_view.current_page)}. {snippet.title}",
+                value=f"[{snippet.channel_title}]({snippet.channel_url}) | {snippet.video_duration}",
+                inline=False
             )
-            for n, snippet in enumerate(snippets):
-                embed.add_field(
-                    name=f"{(n + 1) + (search_view.result_size * search_view.current_page)}. {snippet.title}",
-                    value=f"[{snippet.channel_title}]({snippet.channel_url}) | {snippet.video_duration}",
-                    inline=False
-                )
-            embed.set_footer(text=f"Page {search_view.current_page + 1}/{search_view.max_page}")
+        embed.set_footer(text=f"Page {search_view.current_page + 1}/{search_view.max_page}")
 
-            message = await ctx.send(embed=embed, view=search_view)
-            search_view.on_timeout = lambda: search_view_on_timeout(search_view, message)
-
-        # TODO: 음악 재생 코드 작성
+        message = await ctx.send(embed=embed, view=search_view)
+        search_view.on_timeout = lambda: search_view_on_timeout(search_view, message)
 
 
     @music.command(
@@ -216,6 +326,30 @@ class Music(Cog):
 
         await ctx.send(view=ControlView(self))
 
+
+    @music.command(
+        name="볼륨",
+        aliases=["소리", "ㅂㄹ", "ㅅㄹ"],
+        description="음악의 볼륨을 조절합니다.",
+        usage="음악 볼륨 [볼륨%]"
+    )
+    async def volume(self, ctx: commands.Context[Bot], volume: int = None):
+        bot_voice_client = self._get_bot_voice_client(ctx)
+        if bot_voice_client is None:
+            await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
+            return
+
+        if volume is None:
+            await ctx.reply(f"현재 볼륨: {bot_voice_client.source.volume * 100}%")
+            return
+
+        if not 0 <= volume <= 200:
+            await ctx.reply("볼륨은 0% ~ 200% 사이로 설정 가능합니다.")
+            return
+
+        # TODO: DB에 볼륨 저장해서 불러오기
+        # bot_voice_client.source.volume = volume / 100
+        await ctx.message.add_reaction("👌")
 
     @music.group(
         name="재생목록",
