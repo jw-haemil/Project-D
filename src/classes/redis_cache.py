@@ -1,6 +1,7 @@
 import json
-import aioredis
 import logging
+import aioredis
+from aioredis.lock import Lock
 
 logger = logging.getLogger("discord.bot.redis_cache")
 
@@ -152,3 +153,38 @@ class RedisCache:
             await self.pool.flushdb()
             return True
         return False
+
+    def lock(self, key: str, timeout: int = 10) -> Lock:
+        return RedisMutex(self, key, timeout)
+
+class RedisMutex:
+    def __init__(self, redis: RedisCache, key: str, lock_timeout: int = 5):
+        self.redis = redis
+        self.key = key
+        self.lock_timeout = lock_timeout
+        self._lock = None
+
+    async def __aenter__(self) -> Lock:
+        try:
+            self._lock: Lock = self.redis.pool.lock(self.key, timeout=self.lock_timeout)
+            await self._lock.acquire()
+            logger.debug(f"Lock acquired: {self.key}")
+        except aioredis.RedisError as e:
+            logger.error(f"Error acquiring lock: {self.key}")
+            raise e
+        return self._lock
+
+    async def __aexit__(self, *args, **kwargs):
+        try:
+            await self._lock.release()
+            logger.debug(f"Lock released: {self.key}")
+            self._lock = None
+        except Exception as e:
+            logger.error(f"Error releasing lock: {self.key}")
+            raise e
+
+    async def lock(self):
+        return await self.__aenter__()
+
+    async def unlock(self):
+        return await self.__aexit__()
