@@ -333,23 +333,26 @@ class Music(Cog):
         description="음악의 볼륨을 조절합니다.",
         usage="음악 볼륨 [볼륨%]"
     )
-    async def volume(self, ctx: commands.Context[Bot], volume: int = None):
+    async def volume(self, ctx: commands.Context[Bot], volume: commands.Range[int, 0, 200] = None):
         bot_voice_client = self._get_bot_voice_client(ctx)
         if bot_voice_client is None:
             await ctx.reply("봇이 음성 채널에 연결되어 있지 않습니다.")
             return
 
+        # TODO: DB에 볼륨 저장해서 불러오기
         if volume is None:
             await ctx.reply(f"현재 볼륨: {bot_voice_client.source.volume * 100}%")
             return
 
-        if not 0 <= volume <= 200:
-            await ctx.reply("볼륨은 0% ~ 200% 사이로 설정 가능합니다.")
-            return
-
-        # TODO: DB에 볼륨 저장해서 불러오기
         # bot_voice_client.source.volume = volume / 100
         await ctx.message.add_reaction("👌")
+
+    @volume.error
+    async def volume_error(self, ctx: commands.Context[Bot], error: commands.CommandError):
+        if isinstance(error, commands.BadArgument):
+            await ctx.reply("볼륨은 0% ~ 200% 사이로 설정 가능합니다.")
+            ctx.command_failed = False
+
 
     @music.group(
         name="재생목록",
