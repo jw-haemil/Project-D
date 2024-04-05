@@ -25,7 +25,7 @@ class YoutubeSearchAPI:
         current_page_token: str = None,
     ) -> list["Snippet"]:
         """검색어에 대한 동영상 정보를 반환합니다."""
-        query_cache = await self.redis_cache.get_cache_from_json(
+        query_cache = await self.redis_cache.get_cache_to_json(
             key=f"{query}:{page_token}"
         )
         if query_cache is not None:
@@ -72,7 +72,7 @@ class YoutubeSearchAPI:
             },
             search_snippet['items'], video_snippet['items']
         ))
-        await self.redis_cache.set_cache_to_json(f"{query}:{page_token if page_token is not None else 'FirstPage'}", result_snippets, expire=24*3600)
+        await self.redis_cache.set_cache_from_json(f"{query}:{page_token if page_token is not None else 'FirstPage'}", result_snippets, expire=24*3600)
         return [Snippet(snippet) for snippet in result_snippets]
 
 

@@ -77,7 +77,7 @@ class RedisCache:
             return await self.pool.get(key)
         return None
 
-    async def get_cache_from_json(self, key: str) -> dict | None:
+    async def get_cache_to_json(self, key: str) -> dict | None:
         """
         지정된 키에 대한 JSON 형식의 캐시 값을 가져옵니다.
 
@@ -109,7 +109,7 @@ class RedisCache:
             return True
         return False
 
-    async def set_cache_to_json(self, key: str, value: dict | list, expire: int = 600) -> bool:
+    async def set_cache_from_json(self, key: str, value: dict | list, expire: int = 600) -> bool:
         """
         지정된 키와 값을 JSON 형식으로 Redis 캐시에 저장합니다.
 
