@@ -226,8 +226,8 @@ class Music(Cog):
                     return ydl.extract_info(query, download=False)
 
             message = await ctx.send("잠시만 기다려주세요...")
-            music_info = await self.bot.loop.run_in_executor(None, _get_music_info)
-            if music_info is not None:
+            yt_info = await self.bot.loop.run_in_executor(None, _get_music_info)
+            if yt_info is not None:
                 search_flag = True
                 if ctx.author.voice is None:
                     await message.edit(content="먼저 음성 채널에 들어가주세요.")
@@ -237,12 +237,12 @@ class Music(Cog):
                 await self.music_playlist.add_music(
                     guild_id=ctx.guild.id,
                     music=(music_info := MusicInfo(
-                        _name=music_info['title'],
-                        _video_id=music_info['id'],
-                        _channel_title=music_info['uploader'],
-                        _channel_id=music_info['uploader_id'],
-                        _duration=music_info['duration'],
-                        _stream_url=music_info['url']
+                        _name=yt_info['title'],
+                        _video_id=yt_info['id'],
+                        _channel_title=yt_info['uploader'],
+                        _channel_id=yt_info['uploader_id'],
+                        _duration=yt_info['duration'],
+                        _stream_url=yt_info['url']
                     ))
                 )
 
@@ -368,6 +368,7 @@ class Music(Cog):
             await ctx.send(view=QueuePageView(self))
             return
 
+        # 정의되지 않은 subcommand가 있는 경우
         group: commands.Group = ctx.command
         embed = discord.Embed(
             title=f"{group.full_parent_name} {group.name}",
