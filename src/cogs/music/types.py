@@ -44,6 +44,8 @@ YTDL_OPTIONS = {
     "no_warnings": True,
     "extract_audio": True,
     "audioformat": "mp3",
+    "extract_flat": True,
+    "skip_download": True,
     "postprocessors": [{
         "key": "FFmpegExtractAudio",
         "preferredcodec": "mp3",
