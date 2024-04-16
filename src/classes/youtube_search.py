@@ -2,10 +2,9 @@ import os
 import aiohttp
 import isodate
 import logging
-from datetime import timedelta
 
 from src.classes.redis_cache import RedisCache
-from src.cogs.music.types import MusicInfo
+from src.cogs.music.types import MusicInfo, TimeDelta
 
 logger = logging.getLogger("discord.classes.YoutubeSearchAPI")
 
@@ -76,33 +75,6 @@ class YoutubeSearchAPI:
         await self.redis_cache.set_cache_from_json(f"{query}:{page_token or 'FirstPage'}", result_snippets, expire=24*3600)
         return [Snippet(snippet) for snippet in result_snippets]
 
-
-class TimeDelta:
-    def __init__(self, duration: timedelta):
-        self.duration = duration
-
-    @property
-    def total_seconds(self) -> int:
-        return self.duration.seconds
-
-    @property
-    def days(self) -> int:
-        return self.duration.days
-
-    @property
-    def hours(self) -> int:
-        return self.duration.seconds // 3600
-
-    @property
-    def minutes(self) -> int:
-        return self.duration.seconds // 60 % 60
-
-    @property
-    def seconds(self) -> int:
-        return self.duration.seconds % 60
-
-    def __str__(self):
-        return f"{self.hours:02}:{self.minutes:02}:{self.seconds:02}"
 
 class Snippet:
     def __init__(self, snippet: dict):

@@ -1,12 +1,9 @@
 import asyncio
 from yt_dlp import YoutubeDL
+from datetime import timedelta
 
 from discord.ui import Button, Select
 from typing import TypedDict, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from src.classes.youtube_search import TimeDelta
-    
 
 
 class ControlButtonDict(TypedDict):
@@ -95,7 +92,7 @@ class MusicInfo:
 
     @property
     def video_duration(self) -> "TimeDelta":
-        return TimeDelta(self._duration)
+        return TimeDelta(timedelta(seconds=self._duration))
 
     @property
     def author(self) -> str:
@@ -104,3 +101,31 @@ class MusicInfo:
     @property
     def author_url(self) -> str:
         return f"https://www.youtube.com/channel/{self._channel_id}"
+
+
+class TimeDelta:
+    def __init__(self, duration: timedelta):
+        self.duration = duration
+
+    @property
+    def total_seconds(self) -> int:
+        return self.duration.seconds
+
+    @property
+    def days(self) -> int:
+        return self.duration.days
+
+    @property
+    def hours(self) -> int:
+        return self.duration.seconds // 3600
+
+    @property
+    def minutes(self) -> int:
+        return self.duration.seconds // 60 % 60
+
+    @property
+    def seconds(self) -> int:
+        return self.duration.seconds % 60
+
+    def __str__(self):
+        return f"{self.hours:02}:{self.minutes:02}:{self.seconds:02}"
