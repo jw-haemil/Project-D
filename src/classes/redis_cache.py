@@ -22,7 +22,7 @@ class RedisCache:
 
         self.pool = None
 
-    def auth(self, username: str, password: str) -> bool:
+    async def auth(self, username: str, password: str) -> bool:
         """
         인증을 수행합니다.
 
@@ -43,6 +43,7 @@ class RedisCache:
                 encoding="utf-8",
                 decode_responses=True
             )
+            await self.pool.ping()
         except aioredis.ConnectionError as e:
             self.pool = None
             logger.error(f"Redis connection failed: {e}")

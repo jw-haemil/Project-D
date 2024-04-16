@@ -50,7 +50,7 @@ class Bot(commands.Bot):
             port=os.getenv("REDIS_PORT"),
             db=os.getenv("REDIS_DB")
         )
-        assert self.redis_cache.auth(
+        assert await self.redis_cache.auth(
             username=os.getenv("REDIS_USER"),
             password=os.getenv("REDIS_PASSWORD")
         ), "Redis connection failed"
@@ -66,8 +66,11 @@ class Bot(commands.Bot):
                 await self.load_extension(f"src.cogs.{filename[:-3]}")
 
         GUILD_ID = discord.Object(id=os.getenv("DISCORD_GUILD_ID"))
-        self.tree.copy_global_to(guild=GUILD_ID)
-        await self.tree.sync(guild=GUILD_ID)
+        if GUILD_ID is None:
+            await self.tree.sync()
+        else:
+            self.tree.copy_global_to(guild=GUILD_ID)
+            await self.tree.sync(guild=GUILD_ID)
 
     async def on_ready(self):
         self.logger.info(f"{self.user} 봇 준비 완료")
