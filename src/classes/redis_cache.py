@@ -8,61 +8,61 @@ logger = logging.getLogger("discord.bot.redis_cache")
 
 class RedisCache:
     def __init__(self, host: str, port: str, db: str):
-            """
-            RedisCache 클래스의 생성자입니다.
+        """
+        RedisCache 클래스의 생성자입니다.
 
-            Parameters:
-                host (str): Redis 서버의 호스트 주소입니다.
-                port (str): Redis 서버의 포트 번호입니다.
-                db (str): Redis 서버의 데이터베이스 번호입니다.
-            """
-            self.host = host
-            self.port = int(port)
-            self.db = int(db)
+        Parameters:
+            host (str): Redis 서버의 호스트 주소입니다.
+            port (str): Redis 서버의 포트 번호입니다.
+            db (str): Redis 서버의 데이터베이스 번호입니다.
+        """
+        self.host = host
+        self.port = int(port)
+        self.db = int(db)
 
-            self.pool = None
+        self.pool = None
 
     def auth(self, username: str, password: str) -> bool:
-            """
-            인증을 수행합니다.
+        """
+        인증을 수행합니다.
 
-            Parameters:
-                username (str): 사용자 이름
-                password (str): 비밀번호
+        Parameters:
+            username (str): 사용자 이름
+            password (str): 비밀번호
 
-            Returns:
-                bool: 인증 성공 여부
-            """
-            try:
-                self.pool: aioredis.Redis = aioredis.from_url(
-                    url=f"redis://{self.host}",
-                    port=self.port,
-                    username=username,
-                    password=password,
-                    db=self.db,
-                    encoding="utf-8",
-                    decode_responses=True
-                )
-            except aioredis.ConnectionError as e:
-                self.pool = None
-                logger.error(f"Redis connection failed: {e}")
-                return False
-            else:
-                logger.info("Redis connection established")
-                return True
+        Returns:
+            bool: 인증 성공 여부
+        """
+        try:
+            self.pool: aioredis.Redis = aioredis.from_url(
+                url=f"redis://{self.host}",
+                port=self.port,
+                username=username,
+                password=password,
+                db=self.db,
+                encoding="utf-8",
+                decode_responses=True
+            )
+        except aioredis.ConnectionError as e:
+            self.pool = None
+            logger.error(f"Redis connection failed: {e}")
+            return False
+        else:
+            logger.info("Redis connection established")
+            return True
 
     async def close(self) -> bool:
-            """
-            Redis 연결을 닫습니다.
+        """
+        Redis 연결을 닫습니다.
 
-            Returns:
-                bool: Redis 연결이 성공적으로 닫혔으면 True를 반환하고, 그렇지 않으면 False를 반환합니다.
-            """
-            if self.pool is not None:
-                await self.pool.close()
-                logger.info("Redis connection closed")
-                return True
-            return False
+        Returns:
+            bool: Redis 연결이 성공적으로 닫혔으면 True를 반환하고, 그렇지 않으면 False를 반환합니다.
+        """
+        if self.pool is not None:
+            await self.pool.close()
+            logger.info("Redis connection closed")
+            return True
+        return False
 
     async def get_cache(self, key: str) -> str | None:
         """
