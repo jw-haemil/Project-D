@@ -65,12 +65,13 @@ class Bot(commands.Bot):
             elif filename.endswith(".py"):
                 await self.load_extension(f"src.cogs.{filename[:-3]}")
 
-        GUILD_ID = discord.Object(id=os.getenv("DISCORD_GUILD_ID"))
-        if GUILD_ID is None:
+        GUILD_ID = os.getenv("DISCORD_GUILD_ID")
+        if GUILD_ID in ("x", None):
             await self.tree.sync()
         else:
-            self.tree.copy_global_to(guild=GUILD_ID)
-            await self.tree.sync(guild=GUILD_ID)
+            guild_obj = discord.Object(id=GUILD_ID)
+            self.tree.copy_global_to(guild=guild_obj)
+            await self.tree.sync(guild=guild_obj)
 
     async def on_ready(self):
         self.logger.info(f"{self.user} 봇 준비 완료")
